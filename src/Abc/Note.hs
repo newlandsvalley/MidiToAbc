@@ -201,21 +201,35 @@ abcPitchClass kn = case kn of
       Bfl   -> Bflt
       Bn    -> Baskey
 
+-- circular successor
+csucc :: (Enum a, Ord a, Bounded a) => a -> a
+csucc a = if (a == maxBound) then 
+            minBound
+          else
+            succ a
+
+-- circular predecessor
+cpred :: (Enum a, Ord a, Bounded a) => a -> a
+cpred a = if (a == minBound) then 
+            maxBound
+          else
+            pred a
+
 
 -- translate an ABC pitch in the context of a sharp key signature so that we use askey or explicit pitches
 -- e.g. if G# in the key signature, translate G# as Gaskey (i.e. in the context of a G#),
 -- G as Gexplicit (i.e. an explicit natural G overriding the key signature) 
 translatePitchSharp :: Keys -> AbcPitchClass -> AbcPitchClass
-translatePitchSharp keys apc =  if (apc  `elem` keys) then pred apc
-                                  else if ( succ apc  `elem` keys) then pred apc
+translatePitchSharp keys apc =  if (apc  `elem` keys) then cpred apc
+                                  else if ( csucc apc  `elem` keys) then cpred apc
                                   else apc
 
 -- translate an ABC pitch in the context of a flat key signature so that we use askey or explicit pitches
 -- e.g. if G♭ in the key signature, translate  G♭ as Gaskey (i.e. in the context of a  G♭),
 -- G as Gexplicit (i.e. an explicit natural G overriding the key signature) 
 translatePitchFlat :: Keys -> AbcPitchClass -> AbcPitchClass
-translatePitchFlat keys apc =  if (apc  `elem` keys) then succ (succ apc)
-                                  else if ( pred (pred apc)  `elem` keys) then pred apc
+translatePitchFlat keys apc =  if (apc  `elem` keys) then csucc (csucc apc)
+                                  else if ( cpred (cpred apc)  `elem` keys) then cpred apc
                                   else apc
 
 -- generate a scale corresponding to the requested key signature

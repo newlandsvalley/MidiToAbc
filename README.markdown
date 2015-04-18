@@ -16,7 +16,7 @@ How to Test
 -----------
 The midi directory contains a set of sample Scandi tunes.  The bin directory contains a set of shell scripts which invokes MidiToAbc for each of these, supplying the correct configuration properties as command line parameters.  Output it to the abc directory. 
 
-As yet, there are no unit tests.
+QuickCheck tests in Test.Check.hs are not yet complete.
 
 Dependencies
 ------------
