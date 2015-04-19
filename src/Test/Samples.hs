@@ -38,6 +38,10 @@ midiToScore :: Midi -> AbcContext -> Score AbcEntity
 midiToScore m c = let m1 = fst3 $ fromMidi m
                            in toAbcScore c $ numberBars $ barline c (condense $ removeZeros m1)
 
+midiToFlatScore :: Midi -> AbcContext -> [Char]
+midiToFlatScore m c = let m1 = fst3 $ fromMidi m
+                           in flattenScore c $ toAbcScore c $ numberBars $ barline c (condense $ removeZeros m1)
+
 {-
 abcScore fn = do
                  x <- loadMidiFile fn
@@ -116,6 +120,19 @@ alberta   = do
                                                  ctxDefaultNoteLen = sn,
                                                  ctxBeats = beats (2,4) }
                 print $ "file written to " ++ output
+
+amanda = do
+                x <- loadMidiFile  "../midi/amanda.midi" 
+                let output = "../abc/amanda.txt"             
+                print $ midiToBarline x AbcContext {ctxRhythm = Polska,
+                                                 ctxKeyName = Gn,
+                                                 ctxMode = Minor,
+                                                 ctxScale = genScale (Gn, Minor),
+                                                 ctxLeadIn = (1 / 8),
+                                                 ctxTimeSig = (9,8),
+                                                 ctxDefaultNoteLen = sn,
+                                                 ctxBeats = beats (9,8) }
+                -- print $ "file written to " ++ output
 
  
 abcchord = do

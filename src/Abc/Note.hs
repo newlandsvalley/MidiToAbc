@@ -91,7 +91,7 @@ tsToDur (n, d) = fromIntegral n / fromIntegral d
 
 -- is the time signature in triple time?
 isTripleTime :: TimeSig -> Bool
-isTripleTime ts = ts `elem` [(6,8), (9,8), (12,8)]
+isTripleTime ts = ts `elem` [(3,8), (6,8), (9,8), (12,8)]
 
 -- how many measures of unitDur are within a bar of the supplied time signature
 measuresPerBar :: TimeSig -> Int
@@ -201,6 +201,27 @@ abcPitchClass kn = case kn of
       Bfl   -> Bflt
       Bn    -> Baskey
 
+-- return the name of the major key associated with the supplied minor key
+relativeMajor :: KeyName -> KeyName
+relativeMajor kn = case kn of
+      Cn    -> Efl
+      Csh   -> En
+      Dfl   -> En -- doesn't exist
+      Dn    -> Fn
+      Dsh   -> Fsh
+      Efl   -> Gfl
+      En    -> Gn
+      Fn    -> Afl
+      Fsh   -> An
+      Gfl   -> An -- doesn't exist
+      Gn    -> Bfl
+      Gsh   -> Bn
+      Afl   -> Bn -- we're not using C♭
+      An    -> Cn
+      Ash   -> Csh
+      Bfl   -> Dfl
+      Bn    -> Dn
+
 -- circular successor
 csucc :: (Enum a, Ord a, Bounded a) => a -> a
 csucc a = if (a == maxBound) then 
@@ -234,11 +255,12 @@ translatePitchFlat keys apc =  if (apc  `elem` keys) then csucc (csucc apc)
 
 -- generate a scale corresponding to the requested key signature
 genScale :: KeySig -> AbcScale
-genScale (kn, m) = let abcpc = abcPitchClass kn
-                     in case m of 
-                        Major -> genMajorScale abcpc
-                        Minor -> genMinorScale abcpc
-                       
+genScale (kn, m) =
+   let keyName = if (m == Major) then kn else relativeMajor kn
+       abcpc = abcPitchClass keyName
+   in genMajorScale abcpc
+     
+ 
 
 -- generate a major scale (in abc-friendly pitch notation) from the supplied pitch class defining the key 
 genMajorScale :: AbcPitchClass -> AbcScale
@@ -247,12 +269,7 @@ genMajorScale target = if (target == Caskey) then cScale  -- default to sharp sc
                          map (translatePitchSharp $ genKeyMap target) cScale
                        else
                          map (translatePitchFlat $ genKeyMap target) cScaleFlat
-
--- generate a minor scale from the supplied pitch class defining the key 
-genMinorScale :: AbcPitchClass -> AbcScale
-genMinorScale target = let position = fromEnum target 
-                           relativeMajor = toEnum $ (position + 8) `mod` 28
-                        in genMajorScale relativeMajor
+                         
 
 -- travel clockwise once round the circle of fifths and append the next sharp pitch to the key signature
 nextSharpKeyMap :: (Int, KeyMap) -> (Int, KeyMap)
