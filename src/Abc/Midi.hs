@@ -109,7 +109,14 @@ chordalPair _ _ = False
 midiToChar :: Midi -> AbcContext -> String
 midiToChar m c = let m1 = fst3 $ fromMidi m
                      tuneHeaders = (runReader headers) c
-                    in tuneHeaders ++ (flattenScore c $ splitLongNotes $ toAbcScore c $ tuplets c $ numberBars $ barline c (condense $ removeZeros m1))
+                    in tuneHeaders ++ (flattenScore c $ 
+                                       splitLongNotes $ 
+                                       accidentals $ 
+                                       toAbcScore c $ 
+                                       tuplets c $ 
+                                       numberBars $ 
+                                       barline c 
+                                      (condense $ removeZeros m1))
 
 
 -- check the incoming midi 

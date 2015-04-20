@@ -38,6 +38,11 @@ midiToScore :: Midi -> AbcContext -> Score AbcEntity
 midiToScore m c = let m1 = fst3 $ fromMidi m
                            in toAbcScore c $ numberBars $ barline c (condense $ removeZeros m1)
 
+midiToAccidentals :: Midi -> AbcContext -> Score AbcEntity
+midiToAccidentals m c = let m1 = fst3 $ fromMidi m
+                           in accidentals $ toAbcScore c $ numberBars $ barline c (condense $ removeZeros m1)
+
+
 midiToFlatScore :: Midi -> AbcContext -> [Char]
 midiToFlatScore m c = let m1 = fst3 $ fromMidi m
                            in flattenScore c $ toAbcScore c $ numberBars $ barline c (condense $ removeZeros m1)
@@ -124,7 +129,7 @@ alberta   = do
 amanda = do
                 x <- loadMidiFile  "../midi/amanda.midi" 
                 let output = "../abc/amanda.txt"             
-                print $ midiToBarline x AbcContext {ctxRhythm = Polska,
+                print $ midiToAccidentals x AbcContext {ctxRhythm = Polska,
                                                  ctxKeyName = Gn,
                                                  ctxMode = Minor,
                                                  ctxScale = genScale (Gn, Minor),
