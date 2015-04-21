@@ -104,8 +104,7 @@ chordalPair (PrimNote (Note2 _ d1 _ _)) (PrimNote (Note2 _ d2 _ _)) = let differ
                                                                     in difference <= unitDur
 chordalPair _ _ = False
 
-
-         
+        
 midiToChar :: Midi -> AbcContext -> String
 midiToChar m c = let m1 = fst3 $ fromMidi m
                      tuneHeaders = (runReader headers) c
@@ -117,7 +116,6 @@ midiToChar m c = let m1 = fst3 $ fromMidi m
                                        numberBars $ 
                                        barline c 
                                       (condense $ removeZeros m1))
-
 
 -- check the incoming midi 
 checkMidi :: Midi -> Either String Midi

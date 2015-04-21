@@ -57,6 +57,7 @@ tuplets c s =  let timeSig = (ctxTimeSig c)
 addTuplets :: TimeSig -> Notes Prim2 -> Notes Prim2
 addTuplets t n = tupMap ( augmentNoteDuration . identifyDuplet ) $ toNotes $ mergeN t $ flattenN t n
 
+
 -- wrap a Prim2 note in a Tuplet container if it it a tuplet candidate
 wrapNote :: Rational -> Prim2 -> Notes Prim2
 wrapNote r n = if (isTupletCandidate n) then Phrase (Tuplet r [n])
@@ -120,7 +121,7 @@ isTupletCandidate n =
     in case n of
       (Note2 d ofs p onBeat) ->
         let m = toMeasure d	
-	in (m `mod` base /= 0) || ( m == (3 * base))
+	in (m `mod` base /= 0) || ( d == (3/16))
       _ -> False
 
 
