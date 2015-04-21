@@ -405,8 +405,8 @@ display Tie = do return "-"
 displayDur :: Dur -> Reader AbcContext [Char]
 displayDur d = do
                    defaultNoteLen <- asks ctxDefaultNoteLen
-                   let divisor = defaultNoteLen / unitDur  -- i.e. 3 - the divisor for notes bigger than default if it is sn
-                                                              --      6 - the divisor for notes bigger than default if it is en
+                   let divisor = defaultNoteLen / unitDur  -- i.e. 6 - the divisor for notes bigger than default if it is sn
+                                                           --     12 - the divisor for notes bigger than default if it is en
                        tolerance = d / defaultNoteLen      -- shows whether a note is bigger or smaller than the default            
                        fractional = round (fromIntegral 1 / tolerance) -- the fractional note for notes smaller than sn
                        integral = toMeasure $ d / divisor

@@ -34,25 +34,28 @@ is a multiple of 6.  If, however, it is notated in 3/4 we need to perform the fo
 1) multiply the note length by 3/2
 2) Encapsulate the note (and its partners) into a Triplet container which will issue the corresponding
    abc inverse operation (divide by 3/2 notated as (3:2... ) once translated to abc.
-   
+    
 Thus our algorithm for triplets needs to be applied in 2/4, 3/4 and 4/4 and identify notes which are multiples of three.  It should
 gather these into an individual triplet container until an exact multiple of beat-lengths (i.e. of 1/4) is reached.
 
+Duplets are recognised by first recognising them as (4:3:2 quadruplets and then afterwards renaming them as (2 duplets.  They
+appear to hold a 'magic' number of 18-measure (3/16 Dur) notes.
 
 -}
 
-tripletTime, quadrupletTime :: Rational
+dupletTime, tripletTime, quadrupletTime :: Rational
+dupletTime = (2/3)
 tripletTime = (3/2)
 quadrupletTime = (4/3)
 
--- apply triplet recognition to all scores
+-- apply tuplet recognition to all scores
 tuplets :: AbcContext -> Score Prim2 -> Score Prim2
 tuplets c s =  let timeSig = (ctxTimeSig c) 
                   in reshapeScore (addTuplets timeSig) s
     
 -- identify all tuplet notes and gather them together within a sequence of notes
 addTuplets :: TimeSig -> Notes Prim2 -> Notes Prim2
-addTuplets t n = tupMap augmentNoteDuration $ toNotes $ mergeN t $ flattenN t n
+addTuplets t n = tupMap ( augmentNoteDuration . identifyDuplet ) $ toNotes $ mergeN t $ flattenN t n
 
 -- wrap a Prim2 note in a Tuplet container if it it a tuplet candidate
 wrapNote :: Rational -> Prim2 -> Notes Prim2
@@ -100,14 +103,24 @@ augmentNoteDuration (Tuplet r ns) =
    let f = (\(Note2 d ofs p onBeat) -> (Note2 (d * r) ofs p False))
    in Tuplet r (map f ns)
 
+-- Identify duplet (by renaming any (4:3:2 quadruplet)
+identifyDuplet :: Tuplet Prim2 -> Tuplet Prim2
+identifyDuplet t@(Tuplet r ns) = 
+   if (r == quadrupletTime) && (length ns == 2) then
+     Tuplet dupletTime ns
+   else
+     t
+
 -- return True if the note is a Tuplet candidate (i.e. not a round number of displayable note durations)
+-- also if the duration is 3/16 i.e. 18 measures which is the footprint of a duplet, but identified as
+-- a (4:3:2 form of quadruplet
 isTupletCandidate :: Prim2 -> Bool
 isTupletCandidate n = 
     let base = noteDisplayTolerance
     in case n of
       (Note2 d ofs p onBeat) ->
         let m = toMeasure d	
-	in m `mod` base /= 0
+	in (m `mod` base /= 0) || ( m == (3 * base))
       _ -> False
 
 

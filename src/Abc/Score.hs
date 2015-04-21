@@ -11,12 +11,13 @@ data Score a = EndScore
 
 data Notes a = PrimNote a
              | (Notes a) :+++: (Notes a)    -- a group of notes
-             | Phrase (Tuplet a)            -- a triplet or quadruplet
+             | Phrase (Tuplet a)            -- a duplet, triplet or quadruplet
         deriving (Show, Eq, Ord)
 
 -- here Rational defines the type of Tuplet - 
--- (3/2) is three notes in the time of two (Triplet) 
--- (4/3) is four notes in the time of three (Quadruplet) 
+-- (2/3) is two notes in the time of three (duplet) 
+-- (3/2) is three notes in the time of two (triplet) 
+-- (4/3) is four notes in the time of three (quadruplet) 
 data Tuplet a = Tuplet Rational [a]
         deriving (Show, Eq, Ord)
 

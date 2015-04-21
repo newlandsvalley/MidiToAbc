@@ -27,6 +27,7 @@ flattenScore ctx score =
 -- p = the number of notes to be put into time q
 -- q = the time that p notes will be played in
 -- r = the number of notes to continue to do this action for
+-- simplified where possible to just p
 abcTuplet :: Rational -> Int -> [Char]
 abcTuplet r noteCount = 
     let numer = fromIntegral $ numerator r
@@ -75,7 +76,6 @@ splitNote nt@(AbcNote p d onBeat) =
          n2 d2 = AbcNote p d2 False
 splitNote x = PrimNote x
 
-
 -- handle accidentals properly
 -- (an accidental in a bar influences other notes appearing later in the bar)
 accidentals :: AbcScore -> AbcScore
@@ -89,6 +89,7 @@ fixAccidentals ns = snd $ accidentalsWork [] ns
 -- fixing the accidental damage as we go:
 -- If the incoming note is marked as 'asKey' then change it to 'expl'  (explicit natural).
 -- On the other hand, if it is not then add it to the growing list of accidentals in the bar
+-- and set it to 'asKey' if there's a preceding accidental from which it inherits its characteristics
 accidentalsWork :: Accidentals -> Notes AbcEntity -> (Accidentals, Notes AbcEntity)
 accidentalsWork as p@(PrimNote n) =
     let (as1, n1) = fixAccidental as n
@@ -101,8 +102,6 @@ accidentalsWork as p@(Phrase (Tuplet r ns)) =
     let (as1, ns1) = accidentalsInTuple as ns
     in (as1, (Phrase (Tuplet r ns1)))
 
-
-
 -- Fix the accidentals occuring in a tuple
 accidentalsInTuple :: Accidentals -> [AbcEntity] -> (Accidentals, [AbcEntity])
 accidentalsInTuple as [] = (as, [])  
@@ -110,7 +109,6 @@ accidentalsInTuple as (ae:aes) =
     let (as1, ae1) = fixAccidental as ae
         (as2, aes2) = accidentalsInTuple as1 aes
     in (as2, ae1 : aes2)
-
 
 -- Fix an accidental in an individual note
 fixAccidental :: Accidentals -> AbcEntity -> (Accidentals, AbcEntity)
@@ -130,7 +128,6 @@ fixAccidental as ae@(AbcNote (pc, oct) dur onBeat) =
        else 
          (addAccidental pc as, AbcNote (pc, oct) dur onBeat)
 fixAccidental as x = (as, x)
-
 
 -- add an accidental to the list
 -- Only one accidental for any given pitch (A-G) is allowed
@@ -153,10 +150,9 @@ someAccidentalInBar pc as =
    let preface = pitchPreface pc    
    in preface `elem` (map pitchPreface as)
 
--- return True if some accidental for the supplied pitch already exists in the list
+-- return True if this exact accidental for the supplied pitch already exists in the list
 thisAccidentalInBar :: AbcPitchClass -> Accidentals -> Bool
 thisAccidentalInBar pc as = pc `elem` as
-
 
 -- return True if the pitch is marked simply as inheriting its nature from the key signature
 isAsKey :: AbcPitchClass -> Bool
@@ -169,7 +165,6 @@ makeExplicit a = read $ pitchPreface a : "expl"
 -- make a pitch class 'as key' and thus taking on the aspects of a previous accidental in the bar
 makeAsKey :: AbcPitchClass -> AbcPitchClass
 makeAsKey a = read $ pitchPreface a : "askey"
-
 
 -- get the first letter of the accidental representing its base pitch
 pitchPreface :: AbcPitchClass -> Char
