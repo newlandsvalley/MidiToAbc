@@ -16,5 +16,5 @@ cabal.sandbox.config
 *.aux
 *.hp
 /obj/*
-/src/MidiToAbc
+/src/miditoabc
 

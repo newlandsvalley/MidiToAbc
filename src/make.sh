@@ -5,4 +5,4 @@
 #
 ##############################################
 
-ghc --make -outputdir ../obj MidiToAbc.hs
+ghc --make -o miditoabc -outputdir ../obj MidiToAbc.hs
