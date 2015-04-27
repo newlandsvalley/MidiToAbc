@@ -47,7 +47,7 @@ data Rhythm =
    Jig | SlipJig | Slide | Reel | Polka | Hornpipe | Polska | Marsch | Waltz | Schottis | Engelska | Gånglåt | Hambo | Skänklåt
      deriving (Show, Eq, Ord, Read)
 
--- any scale
+-- any scale but used here particularly to represent different chromatic scales
 type AbcScale = [AbcPitchClass]
 -- any set of pitches defining a key - must be all sharps or all flats. The empty set is they key of C.
 type Keys = [AbcPitchClass] 
