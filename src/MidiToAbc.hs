@@ -4,6 +4,7 @@ import Abc.Note ( Rhythm, Mode, KeyName, KeySig, TimeSig, AbcContext (..),
                   beats, genScale )
 import Abc.Midi ( loadMidiFile, midiToChar )
 import Codec.Midi
+-- import System.Exit
 
 data TuneArgs = TuneArgs
   { intro   :: Dur
@@ -84,6 +85,7 @@ tuneopts (TuneArgs l d t r k m i o False) =
            writeFile o $ midiToChar f ctx
 
            putStrLn $ "output written to " ++ o
+    
 
 tuneopts _ = return ()
 

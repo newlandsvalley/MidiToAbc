@@ -44,7 +44,7 @@ data Mode = Major | Minor
 
 -- supported rhythms
 data Rhythm =
-   Jig | SlipJig | Slide | Reel | Polka | Hornpipe | Polska | Marsch | Waltz | Schottis | Engelska
+   Jig | SlipJig | Slide | Reel | Polka | Hornpipe | Polska | Marsch | Waltz | Schottis | Engelska | Gånglåt | Hambo | Skänklåt
      deriving (Show, Eq, Ord, Read)
 
 -- any scale
