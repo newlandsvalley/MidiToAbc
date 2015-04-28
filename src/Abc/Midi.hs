@@ -104,7 +104,7 @@ chordalPair (PrimNote (Note2 _ d1 _ _)) (PrimNote (Note2 _ d2 _ _)) = let differ
                                                                     in difference <= unitDur
 chordalPair _ _ = False
 
-        
+-- the main transformational routine from midi to a textual score       
 midiToChar :: Midi -> AbcContext -> String
 midiToChar m c = let m1 = fst3 $ fromMidi m
                      tuneHeaders = (runReader headers) c
@@ -117,28 +117,80 @@ midiToChar m c = let m1 = fst3 $ fromMidi m
                                        barline c 
                                       (condense $ removeZeros m1))
 
--- check the incoming midi 
-checkMidi :: Midi -> Either String Midi
-checkMidi m = let ft = fileType m
-              in 
-                if (ft == SingleTrack) then
-                  Right m
-                else
-                  Left "Not a single track midi file"
+-- experimental methods for investigating midi metadata
 
-
--- load and cursorily check a midi file
-loadMidiFile :: FilePath -> IO Midi
-loadMidiFile fn = do
+-- load a midi file and get at the track with the melody
+loadMidiTrack :: Int -> FilePath -> IO Midi
+loadMidiTrack tno fn  = do
   r <- importFile fn 
   case r of
     Left err -> error err
     Right m -> do
-       let mc = checkMidi m
+       let mc = getMidiTrack m tno
        case mc of
          Left err -> error err
          Right m -> return m
+
+-- load a midi file
+loadMidiFile fn = do
+   r <- importFile fn 
+   case r of
+     Left err -> error err
+     Right m  -> return m
+
+-- get the incoming midi track 
+getMidiTrack :: Midi -> Int -> Either String Midi
+getMidiTrack m tno = let ft = fileType m
+              in 
+                if (ft == SingleTrack) then
+                  Right m
+                else if (ft == MultiTrack) then
+                  toMonophonic m tno
+                else
+                  Left "Multi pattern midi not supported"
+
+
+-- convert a multi-track Midi tune to a Single Track tune by filtering just the required track number
+toMonophonic :: Midi -> Int -> Either String Midi
+toMonophonic  m@(Midi SingleTrack _ _) _ = Right m
+toMonophonic  (Midi MultiTrack td trks) tno = 
+  if (tno < 0 || tno >= length trks) then
+    Left "Track number not found"
+  else
+    Right (Midi SingleTrack td [trks !! tno])
+toMonophonic  (Midi MultiPattern td trks) tno = Left "Multi pattern midi not supported"
+
  
+-- extract any time signatures from the initial track metadata and return in the form of an ABC Tune time signature
+initialTimeSigs :: Track a -> [TimeSig]
+initialTimeSigs t =
+    let headers = takeWhile (\(a,m) -> isMetaMessage m ) t
+        tsigms = filter (\(a,m) -> case m of
+             (TimeSignature _ _ _ _) -> True
+             _ -> False
+            ) headers
+    in toTuneTimeSig tsigms
+
+
+-- convert HCodec TimeSignatures from track metadata to ABC Tune TimeSigs
+toTuneTimeSig :: Track a -> [TimeSig]
+toTuneTimeSig t = map toTS t
+                where
+                 toTS  (a,(TimeSignature n d _ _)) = (n, 2^d)
+                 toTS _ = error "midi header filter failed"
+
+
+-- extract all the time signatures in the midi file and return as a list of lists
+-- (where each internal list holds the initial time signatures for each track)
+extractTimeSigs :: Midi -> [[TimeSig]]
+extractTimeSigs (Midi _ _ trks) = map initialTimeSigs trks
+
+testTS fn= do
+           x <- loadMidiFile fn
+           print $ extractTimeSigs x
+
+
+
 
 fst3 (a,b,c) = a
 snd3 (a,b,c) = b

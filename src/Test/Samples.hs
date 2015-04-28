@@ -15,7 +15,7 @@ This holds a few convenient functions to try out either full or partial translat
 
 
 tcd fn = do
-          x <- loadMidiFile fn
+          x <- loadMidiTrack 0 fn
           print $ fst3 $ fromMidi x
           print $ snd3 $ fromMidi x
           print $ thd3 $ fromMidi x
@@ -49,7 +49,7 @@ midiToFlatScore m c = let m1 = fst3 $ fromMidi m
 
 {-
 abcScore fn = do
-                 x <- loadMidiFile fn
+                 x <- loadMidiTrack 0 fn
                  print $ midiToAbcChars x AbcContext {ctxRhythm = Reel,
                                                      ctxMode = Major,
                                                      ctxKeyName = Dn,
@@ -61,8 +61,8 @@ abcScore fn = do
 -}
 
 brudestykke = do
-                x <- loadMidiFile  "../midi/brudemarsch1.midi"
-                let output = "../abc/brudemarsch1.txt"                  
+                x <- loadMidiTrack 0  "../midi/brudemarsch1.mid"
+                let output = "../abc/brudemarsch1.abc"                  
                 writeFile output $ midiToChar x AbcContext {ctxRhythm = Marsch,
                                                  ctxKeyName = An,
                                                  ctxMode = Major,
@@ -74,7 +74,7 @@ brudestykke = do
                 print $ "file written to " ++ output
 
 hemtilldalen = do
-                x <- loadMidiFile  "../midi/hemtilldalen.midi"      
+                x <- loadMidiTrack 0  "../midi/hemtilldalen.mid"      
                 let output = "../abc/hemtilldalen.abc"                      
                 writeFile output $ midiToChar x AbcContext {ctxRhythm = Waltz,
                                                  ctxKeyName = Gn,
@@ -88,8 +88,8 @@ hemtilldalen = do
 
 
 arepolskan = do
-                x <- loadMidiFile  "../midi/årepolskan.midi"
-                let output = "../abc/årepolskan.txt"                  
+                x <- loadMidiTrack 0  "../midi/årepolskan.mid"
+                let output = "../abc/årepolskan.abc"                  
                 writeFile output $ midiToChar x AbcContext {ctxRhythm = Polska,
                                                  ctxKeyName = Gn,
                                                  ctxMode = Major,
@@ -101,8 +101,8 @@ arepolskan = do
                 print $ "file written to " ++ output
 
 antefalk   = do
-                x <- loadMidiFile  "../midi/antefalkpolska.midi" 
-                let output = "../abc/antefalkpolska.txt"             
+                x <- loadMidiTrack 0  "../midi/antefalkpolska.mid" 
+                let output = "../abc/antefalkpolska.abc"             
                 writeFile output $ midiToChar x AbcContext {ctxRhythm = Polska,
                                                  ctxKeyName = Dn,
                                                  ctxMode = Major,
@@ -114,8 +114,8 @@ antefalk   = do
                 print $ "file written to " ++ output
 
 alberta   = do
-                x <- loadMidiFile  "../midi/albertaugustssonengelska.midi" 
-                let output = "../abc/albertaugustsson.txt"             
+                x <- loadMidiTrack 0  "../midi/albertaugustssonengelska.mid" 
+                let output = "../abc/albertaugustsson.abc"             
                 writeFile output $ midiToChar x AbcContext {ctxRhythm = Polska,
                                                  ctxKeyName = An,
                                                  ctxMode = Major,
@@ -127,8 +127,8 @@ alberta   = do
                 print $ "file written to " ++ output
 
 amanda = do
-                x <- loadMidiFile  "../midi/amanda.midi" 
-                let output = "../abc/amanda.txt"             
+                x <- loadMidiTrack 0  "../midi/amanda.mid" 
+                let output = "../abc/amanda.abc"             
                 print $ midiToAccidentals x AbcContext {ctxRhythm = Polska,
                                                  ctxKeyName = Gn,
                                                  ctxMode = Minor,
@@ -139,9 +139,21 @@ amanda = do
                                                  ctxBeats = beats (9,8) }
                 -- print $ "file written to " ++ output
 
+harryPotter = do
+                x <- loadMidiTrack 1  "../midi/harrypotter.mid"  
+                let output = "../abc/harryPotter.abc"             
+                writeFile output $  midiToChar x AbcContext {ctxRhythm = Jig,
+                                                 ctxKeyName = An,
+                                                 ctxMode = Minor,
+                                                 ctxScale = genScale (An, Minor),
+                                                 ctxLeadIn = (1 / 4),
+                                                 ctxTimeSig = (6,8),
+                                                 ctxDefaultNoteLen = sn,
+                                                 ctxBeats = beats (6,8) }
+                print $ "file written to " ++ output
  
 abcchord = do
-             x <- loadMidiFile  "../midi/abcchord.midi"     
+             x <- loadMidiTrack 0  "../midi/abcchord.mid"     
                        
              print $ midiToChar x AbcContext {ctxRhythm = Reel,
                                               ctxKeyName = Gn,
@@ -156,7 +168,7 @@ abcchord = do
              -}
 
 testBarline = do
-                x <- loadMidiFile  "../midi/brudemarsch1.midi" 
+                x <- loadMidiTrack 0  "../midi/brudemarsch1.mid" 
                 print $ midiToBarline x AbcContext {ctxRhythm = Marsch,
                                                  ctxKeyName = An,
                                                  ctxMode = Major,
@@ -167,12 +179,12 @@ testBarline = do
                                                  ctxBeats = beats (2,4)  }
 
 simplifyBrudestykke = do
-                x <- loadMidiFile  "../midi/brudemarsch1.midi"
+                x <- loadMidiTrack 0  "../midi/brudemarsch1.mid"
                 print $ condense $ removeZeros $ fst3 $ fromMidi x
                 
                 
 testPolska = do
-                x <- loadMidiFile  "../midi/årepolskan.midi" 
+                x <- loadMidiTrack 0  "../midi/årepolskan.mid" 
                 print $ midiToBarline x AbcContext {ctxRhythm = Polska,
                                                  ctxKeyName = Gn,
                                                  ctxMode = Major,
@@ -183,7 +195,7 @@ testPolska = do
                                                  ctxBeats = beats (9,8) }
 
 testTriplets = do
-                x <- loadMidiFile  "../midi/threefourtripletpolska.midi" 
+                x <- loadMidiTrack 0  "../midi/threefourtripletpolska.mid" 
                 print $ midiToTuplets x AbcContext {ctxRhythm = Polska,
                                                  ctxKeyName = Dn,
                                                  ctxMode = Major,
@@ -194,7 +206,7 @@ testTriplets = do
                                                  ctxBeats = beats (9,8) }
 
 testQuadruplets = do
-                x <- loadMidiFile  "../midi/quadrupletpolska.midi" 
+                x <- loadMidiTrack 0  "../midi/quadrupletpolska.mid" 
                 print $ midiToBarline x AbcContext {ctxRhythm = Polska,
                                                  ctxKeyName = Dn,
                                                  ctxMode = Major,
@@ -206,10 +218,10 @@ testQuadruplets = do
                    
 
 simplify fn = do
-                 x <- loadMidiFile fn
+                 x <- loadMidiTrack 0 fn
                  print $ condense $ removeZeros $ fst3 $ fromMidi x
 
 playIt fn = do
-                 x <- loadMidiFile fn
+                 x <- loadMidiTrack 0 fn
                  play $ removeZeros $ fst3 $  fromMidi x
 
