@@ -4,7 +4,6 @@ import Abc.Note ( Rhythm, Mode, KeyName, KeySig, TimeSig, AbcContext (..),
                   beats, genScale )
 import Abc.Midi ( loadMidiFile, midiToChar )
 import Codec.Midi
--- import System.Exit
 
 data TuneArgs = TuneArgs
   { intro   :: Dur
@@ -13,6 +12,7 @@ data TuneArgs = TuneArgs
   , rhythm  :: Rhythm
   , key     :: KeyName
   , mode    :: Mode
+  , name    :: String
   , input   :: String
   , output  :: String
   , quiet   :: Bool }
@@ -50,6 +50,11 @@ tuneArgs = TuneArgs
         <> metavar "<mode>"
         <> help "Mode: Major or Minor" )
      <*> strOption
+         ( long "name"
+        <> short 'n'
+        <> metavar "<name>"
+        <> help "Tune name" )
+     <*> strOption
          ( long "input"
         <> short 'i'
         <> metavar "<input>"
@@ -65,9 +70,10 @@ tuneArgs = TuneArgs
 
         
 tuneopts :: TuneArgs -> IO ()
-tuneopts (TuneArgs l d t r k m i o False) = 
+tuneopts (TuneArgs l d t r k m n i o False) = 
          do
-           let ctx = AbcContext {ctxRhythm = r,
+           let ctx = AbcContext {ctxName = n,
+                                 ctxRhythm = r,
                                  ctxKeyName = k,
                                  ctxMode = m,
                                  ctxScale = genScale (k,m),
@@ -78,7 +84,7 @@ tuneopts (TuneArgs l d t r k m i o False) =
 
            putStrLn $ "lead-in length " ++ (show l) ++ " default note length " ++ (show d) 
                   ++ " time signature "  ++ (show t) ++ " rhythm " ++ (show r) ++ " key " 
-                  ++ (show k) ++ " mode " ++ (show m) ++ " input " ++ i ++ " output " ++ o
+                  ++ (show k) ++ " mode " ++ (show m) ++ " name " ++ n ++ " input " ++ i ++ " output " ++ o
 
            f <- loadMidiFile i     
 
@@ -101,5 +107,6 @@ main = execParser opts >>= tuneopts
      <> header "rhythm - [Jig,Polska,Waltz..]" 
      <> header "key - [C|C#|D..]" 
      <> header "mode - [Major|Minor]" 
+     <> header "tune name"  
      <> header "input file path"  
      <> header "output file path" )

@@ -10,17 +10,18 @@ import Control.Monad.Reader
 -- description of supported abc headers
 headers :: Reader AbcContext String
 headers = do        
+            name    <- asks ctxName
             rhythm  <- asks ctxRhythm
             keyName <- asks ctxKeyName
             mode    <- asks ctxMode
             timeSig <- asks ctxTimeSig
             noteLen <- asks ctxDefaultNoteLen
-            return $ tuneHeaders rhythm keyName mode timeSig noteLen
+            return $ tuneHeaders name rhythm keyName mode timeSig noteLen
 
-tuneHeaders :: Rhythm -> KeyName -> Mode -> TimeSig -> Dur -> String
-tuneHeaders r k m t l = unlines [
+tuneHeaders :: String -> Rhythm -> KeyName -> Mode -> TimeSig -> Dur -> String
+tuneHeaders n r k m t l = unlines [
                     xHeader
-                  , tHeader "TitleHere"
+                  , tHeader n
                   , rHeader $ show r
                   , kHeader k m
                   , mHeader t

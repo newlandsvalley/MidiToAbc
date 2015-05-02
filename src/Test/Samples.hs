@@ -50,7 +50,8 @@ midiToFlatScore m c = let m1 = fst3 $ fromMidi m
 {-
 abcScore fn = do
                  x <- loadMidiTrack 0 fn
-                 print $ midiToAbcChars x AbcContext {ctxRhythm = Reel,
+                 print $ midiToAbcChars x AbcContext {ctxName= "abcScore",
+                                                     ctxRhythm = Reel,
                                                      ctxMode = Major,
                                                      ctxKeyName = Dn,
                                                      ctxMode = Major,ctxScale = genScale (Dn, Major),
@@ -63,7 +64,8 @@ abcScore fn = do
 brudestykke = do
                 x <- loadMidiTrack 0  "../midi/brudemarsch1.mid"
                 let output = "../abc/brudemarsch1.abc"                  
-                writeFile output $ midiToChar x AbcContext {ctxRhythm = Marsch,
+                writeFile output $ midiToChar x AbcContext {ctxName= "brudemarsch1",
+                                                 ctxRhythm = Marsch,
                                                  ctxKeyName = An,
                                                  ctxMode = Major,
                                                  ctxScale = genScale (An, Major),
@@ -76,7 +78,8 @@ brudestykke = do
 hemtilldalen = do
                 x <- loadMidiTrack 0  "../midi/hemtilldalen.mid"      
                 let output = "../abc/hemtilldalen.abc"                      
-                writeFile output $ midiToChar x AbcContext {ctxRhythm = Waltz,
+                writeFile output $ midiToChar x AbcContext {ctxName= "hemtilldalen",
+                                                 ctxRhythm = Waltz,
                                                  ctxKeyName = Gn,
                                                  ctxMode = Major,
                                                  ctxScale = genScale (Gn, Major),
@@ -90,7 +93,8 @@ hemtilldalen = do
 arepolskan = do
                 x <- loadMidiTrack 0  "../midi/årepolskan.mid"
                 let output = "../abc/årepolskan.abc"                  
-                writeFile output $ midiToChar x AbcContext {ctxRhythm = Polska,
+                writeFile output $ midiToChar x AbcContext {ctxName= "arepolskan",
+                                                 ctxRhythm = Polska,
                                                  ctxKeyName = Gn,
                                                  ctxMode = Major,
                                                  ctxScale = genScale (Gn, Major),
@@ -103,7 +107,8 @@ arepolskan = do
 antefalk   = do
                 x <- loadMidiTrack 0  "../midi/antefalkpolska.mid" 
                 let output = "../abc/antefalkpolska.abc"             
-                writeFile output $ midiToChar x AbcContext {ctxRhythm = Polska,
+                writeFile output $ midiToChar x AbcContext {ctxName= "antefalkpolska",
+                                                 ctxRhythm = Polska,
                                                  ctxKeyName = Dn,
                                                  ctxMode = Major,
                                                  ctxScale = genScale (Dn, Major),
@@ -116,7 +121,8 @@ antefalk   = do
 alberta   = do
                 x <- loadMidiTrack 0  "../midi/albertaugustssonengelska.mid" 
                 let output = "../abc/albertaugustsson.abc"             
-                writeFile output $ midiToChar x AbcContext {ctxRhythm = Polska,
+                writeFile output $ midiToChar x AbcContext {ctxName= "albertaugustssonengelska",
+                                                 ctxRhythm = Polska,
                                                  ctxKeyName = An,
                                                  ctxMode = Major,
                                                  ctxScale = genScale (An, Major),
@@ -129,7 +135,8 @@ alberta   = do
 amanda = do
                 x <- loadMidiTrack 0  "../midi/amanda.mid" 
                 let output = "../abc/amanda.abc"             
-                print $ midiToAccidentals x AbcContext {ctxRhythm = Polska,
+                print $ midiToAccidentals x AbcContext {ctxName= "amanda",
+                                                 ctxRhythm = Polska,
                                                  ctxKeyName = Gn,
                                                  ctxMode = Minor,
                                                  ctxScale = genScale (Gn, Minor),
@@ -142,7 +149,8 @@ amanda = do
 harryPotter = do
                 x <- loadMidiTrack 1  "../midi/harrypotter.mid"  
                 let output = "../abc/harryPotter.abc"             
-                writeFile output $  midiToChar x AbcContext {ctxRhythm = Jig,
+                writeFile output $  midiToChar x AbcContext {ctxName= "harrypotter",
+                                                 ctxRhythm = Jig,
                                                  ctxKeyName = An,
                                                  ctxMode = Minor,
                                                  ctxScale = genScale (An, Minor),
@@ -155,7 +163,8 @@ harryPotter = do
 abcchord = do
              x <- loadMidiTrack 0  "../midi/abcchord.mid"     
                        
-             print $ midiToChar x AbcContext {ctxRhythm = Reel,
+             print $ midiToChar x AbcContext {ctxName= "abcchord",
+                                              ctxRhythm = Reel,
                                               ctxKeyName = Gn,
                                               ctxMode = Major,
                                               ctxScale = genScale (Gn, Major),
@@ -169,7 +178,8 @@ abcchord = do
 
 testBarline = do
                 x <- loadMidiTrack 0  "../midi/brudemarsch1.mid" 
-                print $ midiToBarline x AbcContext {ctxRhythm = Marsch,
+                print $ midiToBarline x AbcContext {ctxName= "brudemarsch1",
+                                                 ctxRhythm = Marsch,
                                                  ctxKeyName = An,
                                                  ctxMode = Major,
                                                  ctxScale = genScale (An, Major),
@@ -185,7 +195,8 @@ simplifyBrudestykke = do
                 
 testPolska = do
                 x <- loadMidiTrack 0  "../midi/årepolskan.mid" 
-                print $ midiToBarline x AbcContext {ctxRhythm = Polska,
+                print $ midiToBarline x AbcContext {ctxName= "arepolskan",
+                                                 ctxRhythm = Polska,
                                                  ctxKeyName = Gn,
                                                  ctxMode = Major,
                                                  ctxScale = genScale (Gn, Major),
@@ -196,7 +207,8 @@ testPolska = do
 
 testTriplets = do
                 x <- loadMidiTrack 0  "../midi/threefourtripletpolska.mid" 
-                print $ midiToTuplets x AbcContext {ctxRhythm = Polska,
+                print $ midiToTuplets x AbcContext {ctxName= "threefourtripletpolska",
+                                                 ctxRhythm = Polska,
                                                  ctxKeyName = Dn,
                                                  ctxMode = Major,
                                                  ctxScale = genScale (Dn, Major),
@@ -207,7 +219,8 @@ testTriplets = do
 
 testQuadruplets = do
                 x <- loadMidiTrack 0  "../midi/quadrupletpolska.mid" 
-                print $ midiToBarline x AbcContext {ctxRhythm = Polska,
+                print $ midiToBarline x AbcContext {ctxName= "quadrupletpolska",
+                                                 ctxRhythm = Polska,
                                                  ctxKeyName = Dn,
                                                  ctxMode = Major,
                                                  ctxScale = genScale (Dn, Major),
