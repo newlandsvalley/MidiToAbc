@@ -3,7 +3,7 @@
 module Abc.Note ( AbcPitch, AbcContext (..), AbcEntity (..), AbcPitchClass (..), Prim2 (..), 
                            Mode (..), KeyName (..), Rhythm (..), KeySig, TimeSig, IsOnBeat,
                            toAbcEntity,  display, toMeasure, toDur, normaliseDur, measuresPerBar, measuresPerBeat, 
-                           unitDur, barsToLine, noteDisplayTolerance, tsToDur, beats, genScale, isTripleTime ) where
+                           unitDur, barsToLine, noteDisplayTolerance, tsToDur, beats, genScale, isTripleTime, displayRhythm ) where
 
 import Euterpea.Music.Note.Music hiding ( Mode(..) )
 import Data.Char
@@ -416,6 +416,10 @@ displayDur d = do
                         else
                           -- don't bother displaying notes of unit length
                           return $ if (integral > 1) then show integral else ""
+
+displayRhythm :: Rhythm -> String
+displayRhythm SlipJig = "Slip jig"
+displayRhythm r = show r
  
 
 testTranslatePitches :: [AbcPitch]

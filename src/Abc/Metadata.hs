@@ -1,6 +1,6 @@
 module Abc.Metadata ( headers ) where
 
-import Abc.Note ( Rhythm, Mode, KeyName, KeySig, TimeSig, AbcContext (..) )
+import Abc.Note ( Rhythm, Mode, KeyName, KeySig, TimeSig, AbcContext (..), displayRhythm )
 import Euterpea.Music.Note.Music ( Dur )
 import Data.Char
 import Data.Ratio
@@ -22,7 +22,7 @@ tuneHeaders :: String -> Rhythm -> KeyName -> Mode -> TimeSig -> Dur -> String
 tuneHeaders n r k m t l = unlines [
                     xHeader
                   , tHeader n
-                  , rHeader $ show r
+                  , rHeader $ displayRhythm r
                   , kHeader k m
                   , mHeader t
                   , lHeader l
