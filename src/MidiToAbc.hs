@@ -2,13 +2,13 @@ import Options.Applicative
 import Euterpea ( Dur )
 import Abc.Note ( Rhythm, Mode, KeyName, KeySig, TimeSig, AbcContext (..), 
                   beats, genScale )
-import Abc.Midi ( loadMidiFile, midiToChar )
+import Abc.Midi ( loadMidiTrack, midiToChar )
 import Codec.Midi
 
 data TuneArgs = TuneArgs
-  { intro   :: Dur
+  { trackno :: Int
+  , intro   :: Dur
   , noteLen :: Dur
-  , timesig :: TimeSig
   , rhythm  :: Rhythm
   , key     :: KeyName
   , mode    :: Mode
@@ -20,6 +20,11 @@ data TuneArgs = TuneArgs
 tuneArgs :: Parser TuneArgs
 tuneArgs = TuneArgs
      <$> option auto
+         ( long "trackno"
+        <> short 't'
+        <> metavar "<midi-track>"
+        <> help "midi track number" )  
+     <*> option auto
          ( long "leadin"
         <> short 'l'
         <> metavar "<lead-in-length>"
@@ -29,11 +34,6 @@ tuneArgs = TuneArgs
         <> short 'd'
         <> metavar "<default-note-length>"
         <> help "default note length" )
-     <*> option auto
-         ( long "timesig"
-        <> short 't'
-        <> metavar "<time-signature>"
-        <> help "Time signature" )
      <*> option auto
          ( long "rhythm"
         <> short 'r'
@@ -70,25 +70,30 @@ tuneArgs = TuneArgs
 
         
 tuneopts :: TuneArgs -> IO ()
-tuneopts (TuneArgs l d t r k m n i o False) = 
+tuneopts (TuneArgs t l d r k m n i o False) = 
          do
-           let ctx = AbcContext {ctxName = n,
+           -- initial context has an arbitrary Time Signature
+           let ctx = AbcContext {ctxTrackNo = t,
+                                 ctxName = n,
                                  ctxRhythm = r,
                                  ctxKeyName = k,
                                  ctxMode = m,
                                  ctxScale = genScale (k,m),
                                  ctxLeadIn = l,
-                                 ctxTimeSig = t,
+                                 ctxTimeSig = (4,4),
                                  ctxDefaultNoteLen = d,
-                                 ctxBeats = beats t }
+                                 ctxBeats = beats (4,4) }
 
-           putStrLn $ "lead-in length " ++ (show l) ++ " default note length " ++ (show d) 
-                  ++ " time signature "  ++ (show t) ++ " rhythm " ++ (show r) ++ " key " 
-                  ++ (show k) ++ " mode " ++ (show m) ++ " name " ++ n ++ " input " ++ i ++ " output " ++ o
+           putStrLn $ "track no " ++ (show t) ++ " lead-in length " ++ (show l) ++ " default note length " ++ (show d) 
+                       ++ " rhythm " ++ (show r) ++ " key "  ++ (show k) ++ " mode " ++ (show m) 
+                       ++ " name " ++ n ++ " input " ++ i ++ " output " ++ o
 
-           f <- loadMidiFile i     
+           (f, ts) <- loadMidiTrack t i     
 
-           writeFile o $ midiToChar f ctx
+           -- update the context with the time signature from the midi
+           let ctx1 = ctx { ctxTimeSig = ts, ctxBeats = beats ts }     
+
+           writeFile o $ midiToChar f ctx1
 
            putStrLn $ "output written to " ++ o
     
@@ -101,9 +106,9 @@ main = execParser opts >>= tuneopts
     opts = info (helper <*> tuneArgs)
       ( fullDesc
      <> progDesc "Get the tune parameters"
+     <> header "trackno - the midi track number (always 0 if a single track file)"
      <> header "leadin - the lead-in bar length (e.g. 0/16 or 3/16)"
      <> header "defaultnotelen - the default note length (e.g. 1/8 or 1/16)"
-     <> header "timesig - the time signature (e.g. (4,4)" 
      <> header "rhythm - [Jig,Polska,Waltz..]" 
      <> header "key - [C|C#|D..]" 
      <> header "mode - [Major|Minor]" 

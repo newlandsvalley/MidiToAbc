@@ -1,4 +1,4 @@
-module Abc.Midi where
+module Abc.Midi (barline, condense, chordalPair, midiToChar, loadMidiTrack, firstTimeSig, extractTimeSigs, testTS, fst3, snd3, thd3) where
 
 import Euterpea
 import Abc.Note
@@ -119,17 +119,19 @@ midiToChar m c = let m1 = fst3 $ fromMidi m
 
 -- experimental methods for investigating midi metadata
 
--- load a midi file and get at the track with the melody
-loadMidiTrack :: Int -> FilePath -> IO Midi
+
+-- load a midi file and get at the track with the melody together with the time signature
+loadMidiTrack :: Int -> FilePath -> IO (Midi, TimeSig)
 loadMidiTrack tno fn  = do
   r <- importFile fn 
   case r of
     Left err -> error err
     Right m -> do
        let mc = getMidiTrack m tno
+           ts = trackZeroTimeSig m
        case mc of
          Left err -> error err
-         Right m -> return m
+         Right m -> return (m, ts)
 
 -- load a midi file
 loadMidiFile fn = do
@@ -137,6 +139,8 @@ loadMidiFile fn = do
    case r of
      Left err -> error err
      Right m  -> return m
+
+
 
 -- get the incoming midi track 
 getMidiTrack :: Midi -> Int -> Either String Midi
@@ -152,7 +156,7 @@ getMidiTrack m tno = let ft = fileType m
 
 -- convert a multi-track Midi tune to a Single Track tune by filtering just the required track number
 toMonophonic :: Midi -> Int -> Either String Midi
-toMonophonic  m@(Midi SingleTrack _ _) _ = Right m
+toMonophonic  m@(Midi SingleTrack _ _) _  = Right m
 toMonophonic  (Midi MultiTrack td trks) tno = 
   if (tno < 0 || tno >= length trks) then
     Left "Track number not found"
@@ -177,13 +181,36 @@ toTuneTimeSig :: Track a -> [TimeSig]
 toTuneTimeSig t = map toTS t
                 where
                  toTS  (a,(TimeSignature n d _ _)) = (n, 2^d)
-                 toTS _ = error "midi header filter failed"
+                 toTS _ = error "midi header initialTimeSigs fillter failed"
 
 
 -- extract all the time signatures in the midi file and return as a list of lists
 -- (where each internal list holds the initial time signatures for each track)
 extractTimeSigs :: Midi -> [[TimeSig]]
 extractTimeSigs (Midi _ _ trks) = map initialTimeSigs trks
+
+
+{- a couple of heuristics for extracting the time signature.
+   (no real idea what to use yet)
+-}
+
+-- extract the final time signature for track zero
+trackZeroTimeSig :: Midi -> TimeSig
+trackZeroTimeSig m = let 
+                   tzsigs = head $ extractTimeSigs m
+                   in case tzsigs of
+                      ([]) -> error "No time signature found in midi" 
+                      x -> head $ reverse x
+          
+-- extract the first we come across
+firstTimeSig :: Midi -> TimeSig 
+firstTimeSig m = let 
+                   tsigs = join $ extractTimeSigs m
+                   in case tsigs of
+                      ([]) -> error "No time signature found in midi track zero"
+                      (x:xs) -> x          
+           
+      
 
 testTS fn= do
            x <- loadMidiFile fn

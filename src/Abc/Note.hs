@@ -105,6 +105,7 @@ measuresPerBeat ts@(n,d) = let grouping = if (isTripleTime ts) then 3 else 1
 
 -- the context for generating an ABC Score
 data AbcContext = AbcContext {
+                    ctxTrackNo        :: Int,       -- the midi track number 
                     ctxName           :: String,    -- the tune name
                     ctxRhythm         :: Rhythm,    -- the name of the rhythm (e.g. polska)
                     ctxKeyName        :: KeyName,   -- the Key Name (e.g. An)
@@ -423,7 +424,8 @@ displayRhythm r = show r
  
 
 testTranslatePitches :: [AbcPitch]
-testTranslatePitches = let context = AbcContext {ctxName = "any",
+testTranslatePitches = let context = AbcContext {ctxTrackNo = 0,
+                                                 ctxName = "any",
                                                  ctxRhythm = Reel,
                                                  ctxKeyName = Gn,
                                                  ctxMode = Major,
@@ -438,7 +440,8 @@ testTranslatePitches = let context = AbcContext {ctxName = "any",
 
 -- translate a list of Euterpea notes to a list of ABC strings
 testTranslateNotes :: [[Char]]
-testTranslateNotes = let context = AbcContext {ctxName = "any",
+testTranslateNotes = let context = AbcContext {ctxTrackNo = 0,
+                                               ctxName = "any",
                                                ctxRhythm = Waltz,
                                                ctxKeyName = Dn,
                                                ctxMode = Major,

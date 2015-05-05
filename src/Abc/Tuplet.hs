@@ -55,7 +55,7 @@ tuplets c s =  let timeSig = (ctxTimeSig c)
     
 -- identify all tuplet notes and gather them together within a sequence of notes
 addTuplets :: TimeSig -> Notes Prim2 -> Notes Prim2
-addTuplets t n = tupMap ( augmentNoteDuration . identifyDuplet ) $ toNotes $ mergeN t $ flattenN t n
+addTuplets t n = tupMap ( augmentNoteDuration . identifyDuplet ) $ toNotes $ replaceSinglets $ mergeN t $ flattenN t n
 
 
 -- wrap a Prim2 note in a Tuplet container if it it a tuplet candidate
@@ -80,7 +80,15 @@ flattenN t x = error "flattenN: unrecognized Notes type"
 mergeN :: TimeSig -> [Notes Prim2] -> [Notes Prim2]
 mergeN t n = foldr (foldTuplets t) [] n
 
--- merge the next tuplet candidate not with the last one wherever possible
+-- remove any degenerate tuplets consisting of only one note by reinstating the single note
+-- (experimental)
+replaceSinglets :: [Notes Prim2] -> [Notes Prim2]
+replaceSinglets ns = let f n = case n of 
+                                (Phrase (Tuplet r tns)) -> if (length tns == 1) then PrimNote (head tns) else n
+                                x -> x
+                    in map f ns
+
+-- merge the next tuplet candidate note with the last one wherever possible
 foldTuplets :: TimeSig -> Notes Prim2 -> [Notes Prim2] -> [Notes Prim2]
 foldTuplets t n acc = case (acc, n) of
       ([], n) -> [n]
