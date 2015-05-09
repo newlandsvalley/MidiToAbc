@@ -69,6 +69,17 @@ splitNote nt@(AbcNote p d onBeat) =
                   (PrimNote (n1 (3 / 8)) :+++: (PrimNote Tie :+++: PrimNote (n2 (4 / 8))))
                 else 
                   (PrimNote (n1 (4 / 8)) :+++: (PrimNote Tie :+++: PrimNote (n2 (3 / 8))));
+
+      (5,16) ->  if (onBeat) then
+                  (PrimNote (n1 (1 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (4 / 16))))
+                else 
+                  (PrimNote (n1 (4 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (1 / 16))));
+
+      (7,16) ->  if (onBeat) then
+                  (PrimNote (n1 (3 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (4 / 16))))
+                else 
+                  (PrimNote (n1 (4 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (3 / 16))));
+
                  
        _    ->  PrimNote nt;
        where 

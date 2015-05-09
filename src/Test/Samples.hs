@@ -1,11 +1,13 @@
 module Test.Samples where
 
-import Euterpea hiding ( Mode(..) )
+
+import Euterpea hiding ( Mode(..), KeySig, Phrase )
 import Abc.Note
 import Abc.Score
 import Abc.AbcScore
 import Abc.Midi
 import Abc.Tuplet
+import Abc.Tools
 import Codec.Midi
 
 {-
@@ -50,6 +52,7 @@ midiToAccidentals m c = let m1 = fst3 $ fromMidi m
 midiToFlatScore :: Midi -> AbcContext -> [Char]
 midiToFlatScore m c = let m1 = fst3 $ fromMidi m
                            in flattenScore c $ toAbcScore c $ numberBars $ barline c (condense $ removeZeros m1)
+
 
 {-
 abcScore fn = do
@@ -138,6 +141,9 @@ antefalk   = do
                                                  ctxBeats = beats ts }
                 print $ "file written to " ++ output
 
+
+
+
 alberta   = do  
                 let trackNo = 0
                 (m,ts) <- loadMidiTrack trackNo  "../midi/albertaugustssonengelska.mid" 
@@ -154,6 +160,7 @@ alberta   = do
                                                  ctxDefaultNoteLen = sn,
                                                  ctxBeats = beats ts }
                 print $ "file written to " ++ output
+
 
 amanda = do
                 let trackNo = 0
@@ -272,13 +279,35 @@ testQuadruplets = do
                                                  ctxTimeSig = ts,
                                                  ctxDefaultNoteLen = en,
                                                  ctxBeats = beats ts }
+
+testPianoSynth = do  
+                let trackNo = 1
+                (m,ts) <- loadMidiTrack trackNo  "../midi/PianoSynth-Track_1-9.mid"  
+                let output = "../abc/PianoSynth-Track_1-9.abc"     
+
+                print $ "time sig " ++ (show ts)
+                     
+                print $ midiToBarline m AbcContext {ctxTrackNo = trackNo,
+                                                 ctxName= "PianoSynth Track 1-9",
+                                                 ctxRhythm = Polska,
+                                                 ctxKeyName = Dn,
+                                                 ctxMode = Major,
+                                                 ctxScale = genScale (Dn, Major),
+                                                 ctxLeadIn = (0 / 4),
+                                                 ctxTimeSig = ts,
+                                                 ctxDefaultNoteLen = sn,
+                                                 ctxBeats = beats ts }
                    
 
-simplify fn = do
-                 (m,ts) <- loadMidiTrack 0 fn
+simplify tno fn = do
+                 (m,ts) <- loadMidiTrack tno fn
                  print $ condense $ removeZeros $ fst3 $ fromMidi m
 
-playIt fn = do
-                 (m,ts) <- loadMidiTrack 0 fn
+playIt tno fn = do
+                 (m,ts) <- loadMidiTrack tno fn
                  play $ removeZeros $ fst3 $  fromMidi m
+
+
+
+
 

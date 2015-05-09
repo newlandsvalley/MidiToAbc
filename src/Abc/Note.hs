@@ -1,14 +1,3 @@
-
-
-module Abc.Note ( AbcPitch, AbcContext (..), AbcEntity (..), AbcPitchClass (..), Prim2 (..), 
-                           Mode (..), KeyName (..), Rhythm (..), KeySig, TimeSig, IsOnBeat,
-                           toAbcEntity,  display, toMeasure, toDur, normaliseDur, measuresPerBar, measuresPerBeat, 
-                           unitDur, barsToLine, noteDisplayTolerance, tsToDur, beats, genScale, isTripleTime, displayRhythm ) where
-
-import Euterpea.Music.Note.Music hiding ( Mode(..) )
-import Data.Char
-import Control.Monad.Reader
-
 -- This module represents a low level Music Primitive Entity in ABC-friendly format
 -- with functions to convert from a Euterpea Primitive
 
@@ -16,6 +5,17 @@ import Control.Monad.Reader
 -- in the context of a key signature where it's either sharpened or flattened.
 -- askey means that the pitch inherits its sharp or flat nature from the key signature.
 -- (hence all naturals are askey in the key of C Major)
+
+module Abc.Note ( AbcPitch, AbcScale, Keys, AbcContext (..), AbcEntity (..), AbcPitchClass (..), Prim2 (..), 
+                           Mode (..), KeyName (..), Rhythm (..), KeySig, TimeSig, IsOnBeat, Measure,
+                           toAbcEntity,  display, toMeasure, toDur, normaliseDur, measuresPerBar, measuresPerBeat, unitDur, 
+                           barsToLine, noteDisplayTolerance, tsToDur, beats, keys, genScale, isTripleTime, displayRhythm ) where
+
+import Euterpea.Music.Note.Music hiding ( Mode(..), KeySig )
+import Data.Char
+import Control.Monad.Reader
+
+
 data AbcPitchClass  =   Cflt | Cexpl | Caskey | Cshp | Dflt  | Dexpl | Daskey  | Dshp 
                  |  Eflt | Eexpl | Easkey | Eshp | Fflt | Fexpl | Faskey | Fshp
                  |  Gflt  | Gexpl | Gaskey | Gshp | Aflt |  Aexpl | Aaskey | Ashp 
@@ -268,9 +268,9 @@ genScale (kn, m) =
 genMajorScale :: AbcPitchClass -> AbcScale
 genMajorScale target = if (target == Caskey) then cScale  -- default to sharp scale for C natural
                        else if (target `elem` sharpKeys) then 
-                         map (translatePitchSharp $ genKeyMap target) cScale
+                         map (translatePitchSharp $ genMajorKeys target) cScale
                        else
-                         map (translatePitchFlat $ genKeyMap target) cScaleFlat
+                         map (translatePitchFlat $ genMajorKeys target) cScaleFlat
                          
 
 -- travel clockwise once round the circle of fifths and append the next sharp pitch to the key signature
@@ -291,14 +291,20 @@ nextFlatKeyMap (position, ks) = let  (apc, keys) = ks
                                  in (nextPos, (nextPitch, nextFlat : keys))
 
 -- generate a major key signature (a set of sharpened or flattened pitches) from a Key pitch
-genKeyMap :: AbcPitchClass ->  Keys
-genKeyMap target = if (target == Caskey) then []
+genMajorKeys :: AbcPitchClass ->  Keys
+genMajorKeys target = if (target == Caskey) then []
                    else if (target `elem` sharpKeys) then 
                      let (pos, (k, ks)) = genSharpPitches target (0, (Caskey, []))
                         in ks
                    else
                      let (pos, (k, ks)) = genFlatPitches target (0, (Caskey, []))
                         in ks
+
+-- get the keys from a key signature
+keys :: KeySig -> Keys
+keys (kn,m) = case m of
+   Major -> genMajorKeys $ abcPitchClass kn
+   Minor -> genMajorKeys $ abcPitchClass $ relativeMajor kn
 
 -- generate the set of sharpened pitches in KeyMap that represent the requested Pitch class by traversing the cycle of fifths
 -- The Int parameter represents the position in the clockwise cycle of fifths (i.e. cScale position modulo 12)

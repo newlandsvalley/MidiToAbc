@@ -57,7 +57,7 @@ barline c n = nFold fn s mul n where
                                        let lhNote = PrimNote (Note2 noteD ofs p isOnBeat)
                                            rhNote = PrimNote (Note2 overspillD ofs p False)
                                            tie = PrimNote TiedNote
-                                         in Bar 0 lhNote (Bar 0 (tie :+++: rhNote) next2)
+                                         in Bar 0 lhNote (Bar 0 (tie :+++: rhNote :+++: n2) next2)
                                    else
                                        Bar 0 newn1 (Bar 0 n2  next2)
                                  else

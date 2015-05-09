@@ -3,7 +3,7 @@ module Abc.Tuplet ( tuplets ) where
 
 import Abc.Score
 import Euterpea.Music.Note.Music ( Dur )
-import Abc.Note ( Prim2 (..), AbcContext (..), TimeSig, isTripleTime, toMeasure, measuresPerBeat, noteDisplayTolerance )
+import Abc.Note ( Prim2 (..), AbcContext (..), TimeSig, Measure, unitDur, isTripleTime, toMeasure, measuresPerBeat, noteDisplayTolerance )
 import Data.Ratio
 
 {-
@@ -47,6 +47,10 @@ dupletTime, tripletTime, quadrupletTime :: Rational
 dupletTime = (2/3)
 tripletTime = (3/2)
 quadrupletTime = (4/3)
+
+-- heuristic to identify the largest note that could fit into a tuplet
+maxTupletCandidateLen :: Measure
+maxTupletCandidateLen = round $ (1/6) / unitDur
 
 -- apply tuplet recognition to all scores
 tuplets :: AbcContext -> Score Prim2 -> Score Prim2
@@ -129,7 +133,7 @@ isTupletCandidate n =
     in case n of
       (Note2 d ofs p onBeat) ->
         let m = toMeasure d	
-	in (m `mod` base /= 0) || ( d == (3/16))
+	in (  ((m `mod` base /= 0) || ( d == (3/16))) && (m <= maxTupletCandidateLen)  )
       _ -> False
 
 
