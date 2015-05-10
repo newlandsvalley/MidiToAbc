@@ -8,8 +8,9 @@
 
 module Abc.Note ( AbcPitch, AbcScale, Keys, AbcContext (..), AbcEntity (..), AbcPitchClass (..), Prim2 (..), 
                            Mode (..), KeyName (..), Rhythm (..), KeySig, TimeSig, IsOnBeat, Measure,
-                           toAbcEntity,  display, toMeasure, toDur, normaliseDur, measuresPerBar, measuresPerBeat, unitDur, 
-                           barsToLine, noteDisplayTolerance, tsToDur, beats, keys, genScale, isTripleTime, displayRhythm ) where
+                           toAbcEntity,  display, toMeasure, toDur, normaliseDur, measuresPerBar, 
+                           measuresPerBeat, unitDur, barsToLine, noteDisplayTolerance, shortestSupportedNote, 
+                           tsToDur, beats, keys, genScale, isTripleTime, displayRhythm ) where
 
 import Euterpea.Music.Note.Music hiding ( Mode(..), KeySig )
 import Data.Char
@@ -35,6 +36,7 @@ type AbcPitch = (AbcPitchClass, Octave)
 data AbcEntity = AbcNote AbcPitch Dur IsOnBeat
                  | AbcRest Dur
                  | Tie
+		 | AbcEmptyNote
         deriving (Show, Eq, Ord)
 
 
@@ -123,6 +125,7 @@ data AbcContext = AbcContext {
 data Prim2 =  Note2 Dur Dur Pitch Bool
              | Rest2 Dur    
              | TiedNote    
+	     | EmptyNote
         deriving (Show, Eq, Ord)
 
 -- Euterpea uses fractional durations but ABC uses integral durations.  Let's unify on a smallest detectable
@@ -145,6 +148,10 @@ barsToLine = 6
 -- This is currently set to a sixteenth note divided by the unitDur - i.e. 1/16 / 1/96 or 6.
 noteDisplayTolerance :: Measure
 noteDisplayTolerance = round $ sn / unitDur
+
+-- what's the shortest supported note that we can actually display ?  Currently we use a thirty-second not - tn
+shortestSupportedNote :: Dur
+shortestSupportedNote = tn
 
 -- Work out the measures at which the beats occur in a bar of music of any given time signature
 -- We are currently using a unit Duration of 1/96 which means a bar of (4,4) occupies 96, (3,4) occupies 72,
@@ -345,6 +352,7 @@ toAbcEntity (Note2 durn durt (pc,o) onBeat) =
               in return $ AbcNote (scale !! pos, o) durn onBeat
 toAbcEntity (Rest2 dur)  =  do return $ AbcRest dur
 toAbcEntity TiedNote  =  do return Tie
+toAbcEntity EmptyNote  =  do return AbcEmptyNote
 
 -- display an Octave in ABC format
 displayOct :: Octave -> [Char]
@@ -406,6 +414,7 @@ display (AbcRest dur) = do
                           duration <- displayDur dur
                           return $ "z" ++ duration
 display Tie = do return "-"
+display AbcEmptyNote = do return ""
 
 -- Display a duration as an ABC measure.  i.e. For a default note length of 1/16 (i.e. sn)
 -- Notes no smaller than sn display as sn = 1, en=2, qn=4 etc

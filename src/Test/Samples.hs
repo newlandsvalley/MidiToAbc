@@ -303,6 +303,11 @@ simplify tno fn = do
                  (m,ts) <- loadMidiTrack tno fn
                  print $ condense $ removeZeros $ fst3 $ fromMidi m
 
+legato tno fn = do
+                 (m,ts) <- loadMidiTrack tno fn
+                 print $ articulate $ condense $ removeZeros $ fst3 $ fromMidi m
+
+
 playIt tno fn = do
                  (m,ts) <- loadMidiTrack tno fn
                  play $ removeZeros $ fst3 $  fromMidi m

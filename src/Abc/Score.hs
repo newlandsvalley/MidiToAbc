@@ -61,11 +61,31 @@ tupMap f (PrimNote a) = PrimNote a
 tupMap f (n1 :+++: n2) = (tupMap f n1) :+++: (tupMap f n2) 
 tupMap f (Phrase m) = Phrase (f m)
 
-
 -- a map over scores
 sMap :: (a -> b) -> Score a -> Score b
 sMap f EndScore = EndScore
 sMap f (Bar i n s) = Bar i (nMap f n) (sMap f s) 
+
+-- a filter over tuplets
+tupFilter ::  (a -> Bool) -> Tuplet a -> Tuplet a
+tupFilter f (Tuplet d n) = Tuplet d (filter f n)
+
+-- a filter over notes
+nFilter ::  (a -> Bool) -> Notes a -> Notes a
+nFilter f (PrimNote a) = PrimNote a
+nFilter f (n1 :+++: n2) = case n1 of
+       PrimNote a1    -> if (f a1)
+                           then PrimNote a1 :+++: nFilter f n2
+                         else
+                           nFilter f n2
+       t@(Phrase tup) -> nFilter f t :+++: nFilter f n2
+       _ -> error "filter: unexpected notes tree shape"
+nFilter f (Phrase tup) = Phrase (tupFilter f tup)
+
+-- a filter over scores
+sFilter ::  (a -> Bool) -> Score a -> Score a
+sFilter f = reshapeScore $ nFilter f
+
 
 -- reshape the notes that constitute the score without altering the type of the notes themselves
 reshapeScore :: (Notes a -> Notes a) -> Score a -> Score a

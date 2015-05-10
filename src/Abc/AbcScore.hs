@@ -1,4 +1,4 @@
-module Abc.AbcScore (flattenScore, toAbcScore, splitLongNotes, accidentals) where
+module Abc.AbcScore (flattenScore, toAbcScore, splitLongNotes, shortestSupportedNote, accidentals, articulate) where
 
 -- import Euterpea
 import Abc.Note
@@ -180,6 +180,32 @@ makeAsKey a = read $ pitchPreface a : "askey"
 -- get the first letter of the accidental representing its base pitch
 pitchPreface :: AbcPitchClass -> Char
 pitchPreface pc = head $ show pc
+
+-- produce a more legato-like articulation of notes
+-- (in particular, we get confused if any notes are played in parallel, for example if a note is
+-- still being played when its successor starts).
+-- truncate or remove the second note as appropriate if this happens
+articulate :: Notes Prim2 -> Notes Prim2
+articulate n = articulate1 (0/1) n
+
+articulate1 :: Rational -> Notes Prim2 -> Notes Prim2
+articulate1 d pr@(PrimNote (Note2 dn dt p b)) = 
+    if (d >= (dn + dt - shortestSupportedNote)) then
+      PrimNote EmptyNote
+    else if (d > dt) then
+      let newnd = (dt + dn - d)
+          newd = dn + dt
+      in PrimNote (Note2 newnd dt p b)
+    else pr  
+articulate1 d (pr@(PrimNote (Note2 dn dt p b)) :+++: n2)  =
+    if (d >= (dn + dt - shortestSupportedNote)) then
+      articulate1 d n2
+    else if (d > dt) then
+      let newnd = (dt + dn - d)
+          newd = dn + dt
+      in PrimNote (Note2 newnd dt p b) :+++: articulate1 newd n2
+    else pr :+++: articulate1 (dn + dt) n2;   
+articulate1 _ _ = error "articulate: unexpected match type"  
 
 
 
