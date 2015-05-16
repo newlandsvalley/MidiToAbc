@@ -123,20 +123,33 @@ condense = mFold fn s p modify where
                                  (_,_) ->  error "condense: unexpected Music1 tree"
     p m1 m2             = (:+++:) m1 m2
     modify c m          = m -- throw controls away for the time being
+    
+-- return True if we detect any note at all in the Music
+foundANote :: Music1 -> Bool
+foundANote = mFold fn s p modify where
+    fn (Note d (p,v))   = True
+    fn (Rest d)         = False
+    s m1 m2             = m1 || m2
+    p m1 m2             = m1 || m2
+    modify c m          = m
 
 
 -- the main transformational routine from midi to a textual score       
 midiToChar :: Midi -> AbcContext -> String
 midiToChar m c = let m1 = fst3 $ fromMidi m
                      tuneHeaders = (runReader headers) c
-                    in tuneHeaders ++ (flattenScore c $ 
-                                       splitLongNotes $ 
-                                       accidentals $ 
-                                       toAbcScore c $ 
-                                       tuplets c $ 
-                                       numberBars $ 
-                                       barline c 
-                                       (articulate . condense $ removeZeros m1))
+                    in 
+                      if (foundANote m1) then                    
+                         tuneHeaders ++ (flattenScore c $ 
+                                         splitLongNotes $ 
+                                         accidentals $ 
+                                         toAbcScore c $ 
+                                         tuplets c $ 
+                                         numberBars $ 
+                                         barline c 
+                                         (articulate . condense $ removeZeros m1))
+                      else
+                         error $ "No melody detected in track "  ++ show (ctxTrackNo c)
 
 -- experimental methods for investigating midi metadata
 
@@ -180,7 +193,7 @@ toMonophonic :: Midi -> Int -> Either String Midi
 toMonophonic  m@(Midi SingleTrack _ _) _  = Right m
 toMonophonic  (Midi MultiTrack td trks) tno = 
   if (tno < 0 || tno >= length trks) then
-    Left "Track number not found"
+    Left $ "Track number " ++ show tno ++ " not found"
   else
     Right (Midi SingleTrack td [trks !! tno])
 toMonophonic  (Midi MultiPattern td trks) tno = Left "Multi pattern midi not supported"

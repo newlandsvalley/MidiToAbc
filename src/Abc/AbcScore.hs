@@ -205,7 +205,7 @@ articulate1 d (pr@(PrimNote (Note2 dn dt p b)) :+++: n2)  =
           newd = dn + dt
       in PrimNote (Note2 newnd dt p b) :+++: articulate1 newd n2
     else pr :+++: articulate1 (dn + dt) n2;   
-articulate1 _ _ = error "articulate: unexpected match type"  
+articulate1 _ x = x
 
 
 
