@@ -182,11 +182,14 @@ pitchPreface :: AbcPitchClass -> Char
 pitchPreface pc = head $ show pc
 
 -- produce a more legato-like articulation of notes
--- (in particular, we get confused if any notes are played in parallel, for example if a note is
--- still being played when its successor starts).
--- truncate or remove the second note as appropriate if this happens
 articulate :: Notes Prim2 -> Notes Prim2
-articulate n = articulate1 (0/1) n
+articulate = articulateExtend . articulateTruncate
+
+-- We get confused if any notes are played in parallel, for example if a note is
+-- still being played when its successor starts.
+-- truncate or remove the second note as appropriate if this happens
+articulateTruncate :: Notes Prim2 -> Notes Prim2
+articulateTruncate n = articulate1 (0/1) n
 
 articulate1 :: Rational -> Notes Prim2 -> Notes Prim2
 articulate1 d pr@(PrimNote (Note2 dn dt p b)) = 
@@ -206,6 +209,29 @@ articulate1 d (pr@(PrimNote (Note2 dn dt p b)) :+++: n2)  =
       in PrimNote (Note2 newnd dt p b) :+++: articulate1 newd n2
     else pr :+++: articulate1 (dn + dt) n2;   
 articulate1 _ x = x
+
+-- experimental
+-- if there is an implied rest between a note and the next one, and if this rest is
+-- smaller than the smallest duration we can recognise, then extend the note duration
+-- by the implied rest duration.  i.e. make the notes appeam more legato.
+articulateExtend :: Notes Prim2 -> Notes Prim2
+articulateExtend ((PrimNote (Note2 dn dt p b)) :+++: n2)  =
+     let nextdt = nextNoteOffset n2
+         delta = nextdt - (dn + dt)
+         newnd = if (delta < shortestSupportedNote) then
+           dn + delta
+         else
+           dn          
+     in 
+      PrimNote (Note2 newnd dt p b) :+++: articulateExtend n2;
+articulateExtend x = x
+       
+
+-- experimental
+nextNoteOffset :: Notes Prim2 -> Rational
+nextNoteOffset (PrimNote (Note2 dn dt p b)) = dt
+nextNoteOffset ((PrimNote (Note2 dn dt p b)) :+++: n2) = dt
+nextNoteOffset _ = (0/1)
 
 
 
