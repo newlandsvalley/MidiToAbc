@@ -167,8 +167,9 @@ carolansreceipt =
             do  
                 let trackNo = 1
                 (m,ts) <- loadMidiTrack trackNo  "../midi/carolansreceipt.mid" 
-                let output = "../abc/carolansreceipt.abc"             
+                let output = "../abc/carolansreceipt.abc"                             
                 print $ "time sig " ++ (show ts) 
+
                 writeFile output $ midiToChar m AbcContext {ctxTrackNo = trackNo,
                                                  ctxName= "Carolans Receipt",
                                                  ctxRhythm = Reel,
@@ -180,6 +181,7 @@ carolansreceipt =
                                                  ctxDefaultNoteLen = sn,
                                                  ctxBeats = beats ts }
                 print $ "file written to " ++ output
+               
            
 
 amanda = do

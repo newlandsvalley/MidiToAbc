@@ -5,6 +5,7 @@ import Abc.Note
 import Abc.Score
 import Control.Monad.Reader
 import Data.Ratio
+import Data.Maybe
 
 type AbcScore = Score AbcEntity
 type Accidentals = [AbcPitchClass]
@@ -60,22 +61,22 @@ splitNote nt@(AbcNote p d onBeat) =
   let pair = (numerator d, denominator d) -- haskell doesn't seem to allow pattern matching on Rationals
    in
     case pair of 
-      (5,8) ->  if (onBeat) then
+      (5,8) ->  if (isJust onBeat) then
                   (PrimNote (n1 (3 / 8)) :+++: (PrimNote Tie :+++: PrimNote (n2 (2 / 8))))
                 else 
                   (PrimNote (n1 (2 / 8)) :+++: (PrimNote Tie :+++: PrimNote (n2 (3 / 8))));
 
-      (7,8) ->  if (onBeat) then
+      (7,8) ->  if (isJust onBeat) then
                   (PrimNote (n1 (3 / 8)) :+++: (PrimNote Tie :+++: PrimNote (n2 (4 / 8))))
                 else 
                   (PrimNote (n1 (4 / 8)) :+++: (PrimNote Tie :+++: PrimNote (n2 (3 / 8))));
 
-      (5,16) ->  if (onBeat) then
+      (5,16) ->  if (isJust onBeat) then
                   (PrimNote (n1 (1 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (4 / 16))))
                 else 
                   (PrimNote (n1 (4 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (1 / 16))));
 
-      (7,16) ->  if (onBeat) then
+      (7,16) ->  if (isJust onBeat) then
                   (PrimNote (n1 (3 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (4 / 16))))
                 else 
                   (PrimNote (n1 (4 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (3 / 16))));
@@ -84,7 +85,7 @@ splitNote nt@(AbcNote p d onBeat) =
        _    ->  PrimNote nt;
        where 
          n1 d1 = AbcNote p d1 onBeat
-         n2 d2 = AbcNote p d2 False
+         n2 d2 = AbcNote p d2 Nothing
 splitNote x = PrimNote x
 
 -- handle accidentals properly
@@ -210,10 +211,10 @@ articulate1 d (pr@(PrimNote (Note2 dn dt p b)) :+++: n2)  =
     else pr :+++: articulate1 (dn + dt) n2;   
 articulate1 _ x = x
 
--- experimental
+
 -- if there is an implied rest between a note and the next one, and if this rest is
 -- smaller than the smallest duration we can recognise, then extend the note duration
--- by the implied rest duration.  i.e. make the notes appeam more legato.
+-- by the implied rest duration.  i.e. make the notes appear more legato.
 articulateExtend :: Notes Prim2 -> Notes Prim2
 articulateExtend ((PrimNote (Note2 dn dt p b)) :+++: n2)  =
      let nextdt = nextNoteOffset n2
@@ -227,7 +228,7 @@ articulateExtend ((PrimNote (Note2 dn dt p b)) :+++: n2)  =
 articulateExtend x = x
        
 
--- experimental
+-- return the offset of the next note
 nextNoteOffset :: Notes Prim2 -> Rational
 nextNoteOffset (PrimNote (Note2 dn dt p b)) = dt
 nextNoteOffset ((PrimNote (Note2 dn dt p b)) :+++: n2) = dt

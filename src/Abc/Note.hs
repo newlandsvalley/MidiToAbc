@@ -7,13 +7,14 @@
 -- (hence all naturals are askey in the key of C Major)
 
 module Abc.Note ( AbcPitch, AbcScale, Keys, AbcContext (..), AbcEntity (..), AbcPitchClass (..), Prim2 (..), 
-                           Mode (..), KeyName (..), Rhythm (..), KeySig, TimeSig, IsOnBeat, Measure,
+                           Mode (..), KeyName (..), Rhythm (..), KeySig, TimeSig, OnBeat, Measure,
                            toAbcEntity,  display, toMeasure, toDur, normaliseDur, measuresPerBar, 
                            measuresPerBeat, unitDur, barsToLine, noteDisplayTolerance, shortestSupportedNote, 
                            tsToDur, beats, keys, genScale, isTripleTime, displayRhythm ) where
 
 import Euterpea.Music.Note.Music hiding ( Mode(..), KeySig )
 import Data.Char
+import Data.Maybe
 import Control.Monad.Reader
 
 
@@ -27,13 +28,13 @@ data AbcPitchClass  =   Cflt | Cexpl | Caskey | Cshp | Dflt  | Dexpl | Daskey  |
 type Measure = Int
 
 -- does the note occur on the beat
-type IsOnBeat = Bool
+type OnBeat = Maybe Int
 
 -- An ABC pitch cf Euterpea Pitch (Euterpea Octave is a type synonym for Integer where 4 is the octave of middle C)
 type AbcPitch = (AbcPitchClass, Octave)
 
 -- An ABC entity at the note level
-data AbcEntity = AbcNote AbcPitch Dur IsOnBeat
+data AbcEntity = AbcNote AbcPitch Dur OnBeat
                  | AbcRest Dur
                  | Tie
 		 | AbcEmptyNote
@@ -123,7 +124,7 @@ data AbcContext = AbcContext {
 -- a data type used just to represent notes immediately after translation from MIDI
 -- the first dur is the note length, the second is the note's offset into the tune
 -- the boolean value detects whether the note occurs on a regular beat of the bar
-data Prim2 =  Note2 Dur Dur Pitch Bool
+data Prim2 =  Note2 Dur Dur Pitch OnBeat
              | Rest2 Dur    
              | TiedNote    
 	     | EmptyNote
@@ -341,7 +342,7 @@ toAbcEntityMP (Prim (Note dur (pc,o))) =
          do
             scale <- asks ctxScale
             let pos = pcToInt pc                
-              in return $ AbcNote (scale !! pos, o) dur False
+              in return $ AbcNote (scale !! pos, o) dur Nothing
 toAbcEntityMP (Prim (Rest dur))  =  do return $ AbcRest dur
 
 -- translate a Prim2 value to a reader from the context to an  AbcEntity
@@ -404,8 +405,8 @@ display :: AbcEntity -> Reader AbcContext [Char]
 display (AbcNote (pc, buggyoct) dur onBeat) = 
                           do 
                              duration <- displayDur dur
+                             padding <- displayPadding onBeat
                              let oct = buggyoct - 1  
-                                 padding = if (onBeat) then " " else ""
                                in if (oct <= 4) then
                                      return $ padding ++ displayPC pc ++ displayOct oct ++ duration 
                                    else
@@ -416,6 +417,28 @@ display (AbcRest dur) = do
                           return $ "z" ++ duration
 display Tie = do return "-"
 display AbcEmptyNote = do return ""
+
+-- Display the note-separation padding determined by the beat 
+-- (where a beat is either None or Just x where x is the beat number counting from 0)
+--
+-- This attempts to sort out beams in the printed score.  ABC tries to beam together notes which are adjacent
+-- but does not do so if notes are separated by a space.  Our space padding algorithm does the following:
+--   note not on beat - no padding
+--   note on beat (all time signatures except 4/4) - pad
+--   note on beat 4/4 - pad on even numbered beats
+displayPadding :: OnBeat -> Reader AbcContext [Char]
+displayPadding onBeat = 
+   do  
+     ts <- asks ctxTimeSig
+     let padding = if (isNothing onBeat) then 
+                      ""
+                   else if (ts == (4,4)) then case onBeat of
+                      (Just 0) -> " "
+                      (Just 2) -> " "
+                      _ -> "";
+                   else
+                      " "
+     return padding
 
 -- Display a duration as an ABC measure.  i.e. For a default note length of 1/16 (i.e. sn)
 -- Notes no smaller than sn display as sn = 1, en=2, qn=4 etc

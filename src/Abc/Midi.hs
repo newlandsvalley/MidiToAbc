@@ -8,6 +8,7 @@ import Abc.Metadata
 import Abc.Tuplet
 import Codec.Midi
 import Control.Monad.Reader
+import Data.List
 
 type IsBarLine = Bool
 type IsTie = Bool
@@ -17,7 +18,7 @@ type IsTie = Bool
 -- the result is a 4-tuple indicating if a bar line is needed, whethere the note lies on the beat
 -- and finally indicating the left hand and right hand note durations if the note is tied
 -- across the bar 
-detectBarline :: AbcContext -> Dur -> Dur -> (IsBarLine, IsOnBeat, Maybe Dur, Maybe Dur)
+detectBarline :: AbcContext -> Dur -> Dur -> (IsBarLine, OnBeat, Maybe Dur, Maybe Dur)
 detectBarline c noteDur tuneDur  = 
             let timeSig = (ctxTimeSig c) 
                 leadInDur = (ctxLeadIn c)
@@ -28,7 +29,8 @@ detectBarline c noteDur tuneDur  =
                 bar = measuresPerBar timeSig
                 leadIn = toMeasure leadInDur
                 spaceRemaining = bar - ((offset - leadIn) `mod` bar)
-                onBeat = spaceRemaining `elem` beats
+                spaceUsed = bar - spaceRemaining
+                onBeat = elemIndex spaceUsed beats
              in 
                 -- there's not enough room for the next note after this so generate a bar
                 if ((spaceRemaining < (note + toMeasure shortestSupportedNote)) && (spaceRemaining >= note)) then
@@ -43,7 +45,7 @@ detectBarline c noteDur tuneDur  =
                   in
                     -- the left hand of the tie is not big enough to display
                     if (lh < toMeasure shortestSupportedNote) then 
-                      (True, True,  Nothing, Just (toDur rh)) 
+                      (True, Nothing,  Nothing, Just (toDur rh)) 
                     -- the right hand of the tie is not big enough to display
                     else if (rh < toMeasure shortestSupportedNote) then 
                       (True, onBeat,  Just (toDur lh), Nothing )
@@ -74,7 +76,7 @@ barline c n = nFold fn s mul n where
                                       (Just l, Just r) ->
                                           let 
                                              lhNote = PrimNote (Note2 l ofs p isOnBeat)
-                                             rhNote = PrimNote (Note2 r (ofs + l) p False)
+                                             rhNote = PrimNote (Note2 r (ofs + l) p Nothing)
                                           in
                                             Bar 0 lhNote (Bar 0 (PrimNote TiedNote :+++: rhNote :+++: n2) next2)   
                                             
@@ -86,7 +88,7 @@ barline c n = nFold fn s mul n where
                                             
                                       (Nothing, Just r) ->  
                                           let 
-                                            rhNote = PrimNote (Note2 r ofs p False)
+                                            rhNote = PrimNote (Note2 r ofs p Nothing)
                                           in
                                             Bar 0 (PrimNote EmptyNote) (Bar 0 (rhNote :+++: n2) next2)  ;  
                                             
@@ -116,7 +118,7 @@ barline c n = nFold fn s mul n where
 --
 condense :: Music1 -> Notes Prim2
 condense = mFold fn s p modify where
-    fn (Note d (p,v))   = PrimNote (Note2 (normaliseDur d) (0 / 1) p False)
+    fn (Note d (p,v))   = PrimNote (Note2 (normaliseDur d) (0 / 1) p Nothing)
     fn (Rest d)         = PrimNote (Rest2 (normaliseDur d))
     s m1 m2             = case (m1, m2) of
                                  (PrimNote (Rest2 ofs), PrimNote (Note2 d ofs1 p onBeat)) -> PrimNote (Note2 (normaliseDur d) (normaliseDur ofs) p onBeat)

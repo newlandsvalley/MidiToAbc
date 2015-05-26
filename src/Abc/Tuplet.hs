@@ -113,7 +113,7 @@ toNotes (x:xs) = x :+++: toNotes xs
 -- of exactly the same duration
 augmentNoteDuration :: Tuplet Prim2 -> Tuplet Prim2
 augmentNoteDuration (Tuplet r ns) = 
-   let f = (\(Note2 d ofs p onBeat) -> (Note2 (d * r) ofs p False))
+   let f = (\(Note2 d ofs p onBeat) -> (Note2 (d * r) ofs p Nothing))
    in Tuplet r (map f ns)
 
 -- Identify duplet (by renaming any (4:3:2 quadruplet)
