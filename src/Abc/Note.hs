@@ -440,27 +440,24 @@ displayPadding onBeat =
                       " "
      return padding
 
--- Display a duration as an ABC measure.  i.e. For a default note length of 1/16 (i.e. sn)
--- Notes no smaller than sn display as sn = 1, en=2, qn=4 etc
--- Notes smaller than sn display as tn = /2, sfn = /4 etc
+-- Display a duration as an ABC measure.  For any default note length dfn
+-- Notes no smaller than dfn display as 1, 2, 4 etc  (although 1 is ignored as the default ABC value)
+-- Notes smaller than dfn display as  /2, /4 etc
 displayDur :: Dur -> Reader AbcContext [Char]
 displayDur d = do
-                   defaultNoteLen <- asks ctxDefaultNoteLen
-                   let divisor = defaultNoteLen / unitDur  -- i.e. 6 - the divisor for notes bigger than default if it is sn
-                                                           --     12 - the divisor for notes bigger than default if it is en
-                       tolerance = d / defaultNoteLen      -- shows whether a note is bigger or smaller than the default            
-                       fractional = round (fromIntegral 1 / tolerance) -- the fractional note for notes smaller than sn
-                       integral = toMeasure $ d / divisor
-                     in if (tolerance < 1) then 
-                          return $  "/" ++ show fractional
-                        else
-                          -- don't bother displaying notes of unit length
-                          return $ if (integral > 1) then show integral else ""
+                 defaultNoteLen <- asks ctxDefaultNoteLen     
+                 let fractional = round (defaultNoteLen / d) -- the fractional note multiplication for notes smaller than the default
+                     integral = round (d / defaultNoteLen)   -- the integral note multiplication for notes bigger than or equal to the default
+                   in 
+                     if (fractional > 1) then 
+                       return $  "/" ++ show fractional
+                     else
+                       -- don't bother displaying notes of unit length
+                      return $ if (integral > 1) then show integral else ""
 
 displayRhythm :: Rhythm -> String
 displayRhythm SlipJig = "Slip jig"
-displayRhythm r = show r
- 
+displayRhythm r = show r 
 
 testTranslatePitches :: [AbcPitch]
 testTranslatePitches = let context = AbcContext {ctxTrackNo = 0,

@@ -219,7 +219,7 @@ articulateExtend :: Notes Prim2 -> Notes Prim2
 articulateExtend ((PrimNote (Note2 dn dt p b)) :+++: n2)  =
      let nextdt = nextNoteOffset n2
          delta = nextdt - (dn + dt)
-         newnd = if (delta < shortestSupportedNote) then
+         newnd = if ((delta > 0) && (delta < shortestSupportedNote)) then
            dn + delta
          else
            dn          
