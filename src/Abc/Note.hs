@@ -125,7 +125,7 @@ data AbcContext = AbcContext {
 -- the first dur is the note length, the second is the note's offset into the tune
 -- the boolean value detects whether the note occurs on a regular beat of the bar
 data Prim2 =  Note2 Dur Dur Pitch OnBeat
-             | Rest2 Dur    
+             | Rest2 Dur Dur   
              | TiedNote    
 	     | EmptyNote
         deriving (Show, Eq, Ord)
@@ -352,7 +352,7 @@ toAbcEntity (Note2 durn durt (pc,o) onBeat) =
             scale <- asks ctxScale
             let pos = pcToInt pc                
               in return $ AbcNote (scale !! pos, o) durn onBeat
-toAbcEntity (Rest2 dur)  =  do return $ AbcRest dur
+toAbcEntity (Rest2 durn durt)  =  do return $ AbcRest durn
 toAbcEntity TiedNote  =  do return Tie
 toAbcEntity EmptyNote  =  do return AbcEmptyNote
 
@@ -414,7 +414,7 @@ display (AbcNote (pc, buggyoct) dur onBeat) =
                                      return $ padding ++ (map toLower (displayPC pc)) ++ displayOct oct ++ duration
 display (AbcRest dur) = do
                           duration <- displayDur dur
-                          return $ "z" ++ duration
+                          return $ " z" ++ duration ++ " "
 display Tie = do return "-"
 display AbcEmptyNote = do return ""
 

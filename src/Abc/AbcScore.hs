@@ -1,6 +1,6 @@
 module Abc.AbcScore (flattenScore, toAbcScore, splitLongNotes, shortestSupportedNote, accidentals, articulate) where
 
--- import Euterpea
+import Euterpea ( Dur )
 import Abc.Note
 import Abc.Score
 import Control.Monad.Reader
@@ -53,12 +53,14 @@ toAbcScore ctx s =
 splitLongNotes :: AbcScore -> AbcScore
 splitLongNotes = reorgNoteInScore splitNote
 
--- It is not possible to notate a single note of length 5 or 7 in a conventional bar
+-- It is not possible to notate a single note of length (say) 5 or 7 in a conventional bar
 -- these must be split up into notes that can be represented and joined with a tie
 -- (an abc parser would give a 'note too dotted' error if it discovered one)
+-- similarly rests are split but with no tie
 splitNote :: AbcEntity -> Notes AbcEntity 
-splitNote nt@(AbcNote p d onBeat) = 
-  let pair = (numerator d, denominator d) -- haskell doesn't seem to allow pattern matching on Rationals
+splitNote nt@(AbcNote p d onBeat) =   
+  let tnsd = toNearestSixteenth d
+      pair = (numerator tnsd, denominator tnsd) -- haskell doesn't seem to allow pattern matching on Rationals
    in
     case pair of 
       (5,8) ->  if (isJust onBeat) then
@@ -69,24 +71,63 @@ splitNote nt@(AbcNote p d onBeat) =
       (7,8) ->  if (isJust onBeat) then
                   (PrimNote (n1 (3 / 8)) :+++: (PrimNote Tie :+++: PrimNote (n2 (4 / 8))))
                 else 
-                  (PrimNote (n1 (4 / 8)) :+++: (PrimNote Tie :+++: PrimNote (n2 (3 / 8))));
+                  (PrimNote (n1 (4 / 8)) :+++: (PrimNote Tie :+++: PrimNote (n2 (3 / 8))))
 
       (5,16) ->  if (isJust onBeat) then
                   (PrimNote (n1 (1 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (4 / 16))))
                 else 
-                  (PrimNote (n1 (4 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (1 / 16))));
+                  (PrimNote (n1 (4 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (1 / 16))))
 
       (7,16) ->  if (isJust onBeat) then
                   (PrimNote (n1 (3 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (4 / 16))))
                 else 
-                  (PrimNote (n1 (4 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (3 / 16))));
+                  (PrimNote (n1 (4 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (3 / 16))))
 
+      (11,16) ->  if (isJust onBeat) then
+                  (PrimNote (n1 (3 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (8 / 16))))
+                else 
+                  (PrimNote (n1 (8 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (3 / 16)))) 
+
+      (13,16) ->  if (isJust onBeat) then
+                  (PrimNote (n1 (1 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (12 / 16))))
+                else 
+                  (PrimNote (n1 (12 / 16)) :+++: (PrimNote Tie :+++: PrimNote (n2 (1 / 16))));
                  
        _    ->  PrimNote nt;
        where 
          n1 d1 = AbcNote p d1 onBeat
          n2 d2 = AbcNote p d2 Nothing
+         
+splitNote r@(AbcRest d) = 
+  let tnsd = toNearestSixteenth d
+      pair = (numerator tnsd, denominator tnsd) 
+   in
+    case pair of 
+      (5,8) ->  (PrimNote (n1 (3 / 8)) :+++: PrimNote (n2 (2 / 8)))
+
+      (7,8) ->  (PrimNote (n1 (3 / 8)) :+++:  PrimNote (n2 (4 / 8)))
+
+      (5,16) -> (PrimNote (n1 (1 / 16)) :+++:  PrimNote (n2 (4 / 16)))
+
+      (7,16) -> (PrimNote (n1 (3 / 16)) :+++:  PrimNote (n2 (4 / 16)))
+
+      (11,16) -> (PrimNote (n1 (3 / 16)) :+++:  PrimNote (n2 (8 / 16)))
+
+      (13,16) -> (PrimNote (n1 (1 / 16)) :+++:  PrimNote (n2 (12 / 16)));
+                 
+       _    ->  PrimNote r;
+       where 
+         n1 d1 = AbcRest d1
+         n2 d2 = AbcRest d2       
+         
 splitNote x = PrimNote x
+
+
+toNearestSixteenth :: Dur -> Dur
+toNearestSixteenth r =
+  let m = round ((fromIntegral $ toMeasure r) / 6) * 6
+  in toDur m
+
 
 -- handle accidentals properly
 -- (an accidental in a bar influences other notes appearing later in the bar)
@@ -215,6 +256,8 @@ articulate1 _ x = x
 -- if there is an implied rest between a note and the next one, and if this rest is
 -- smaller than the smallest duration we can recognise, then extend the note duration
 -- by the implied rest duration.  i.e. make the notes appear more legato.
+-- otherwise, if bigger, introduce the rest.  i.e. this is the place where rests are
+-- introduced to the score by recognising gaps in the midi recording.
 articulateExtend :: Notes Prim2 -> Notes Prim2
 articulateExtend ((PrimNote (Note2 dn dt p b)) :+++: n2)  =
      let nextdt = nextNoteOffset n2
@@ -224,13 +267,18 @@ articulateExtend ((PrimNote (Note2 dn dt p b)) :+++: n2)  =
          else
            dn          
      in 
-      PrimNote (Note2 newnd dt p b) :+++: articulateExtend n2;
+      if (delta >= shortestSupportedNote) then
+        PrimNote (Note2 newnd dt p b) :+++: PrimNote (Rest2 delta (dn + dt)) :+++: articulateExtend n2
+      else
+        PrimNote (Note2 newnd dt p b) :+++: articulateExtend n2;
+        
 articulateExtend x = x
        
 
 -- return the offset of the next note
 nextNoteOffset :: Notes Prim2 -> Rational
 nextNoteOffset (PrimNote (Note2 dn dt p b)) = dt
+nextNoteOffset (PrimNote (Rest2 dn dt)) = dt
 nextNoteOffset ((PrimNote (Note2 dn dt p b)) :+++: n2) = dt
 nextNoteOffset _ = (0/1)
 

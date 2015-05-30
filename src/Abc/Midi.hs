@@ -63,13 +63,13 @@ barline c n = nFold fn s mul n where
 
      fn EmptyNote = Bar 0 (PrimNote EmptyNote) EndScore
      
-     fn r@(Rest2 d) = error "barline: unexpected Rest"  
+     fn r@(Rest2 d ofs) = Bar 0 (PrimNote r) EndScore 
      
      mul d ms = error "barline: unexpected multiplet" 
      
-     s (Bar _ n1 next1) (Bar _ n2 next2) =  
-             let (PrimNote (Note2 d ofs p _)) = n1         -- n1 is the next incoming note to be attached to the rest of the tree
-                 (isBarLine, isOnBeat, maybeLeft, maybeRight) = detectBarline c d ofs
+     s (Bar _ (PrimNote n1@(Note2 d ofs p _)) next1) (Bar _ n2 next2) =  
+             -- n1 is the next incoming note to be attached to the rest of the tree
+             let (isBarLine, isOnBeat, maybeLeft, maybeRight) = detectBarline c d ofs
                  newn1 = PrimNote (Note2 d ofs p isOnBeat) -- newn1 is identical to n1 but with the beat now detected
                             in if (isBarLine) then
                                  case ((maybeLeft, maybeRight)) of
@@ -95,12 +95,38 @@ barline c n = nFold fn s mul n where
                                       (_,_) ->  
                                           error "Barline: detecting tie - no notes"           
                                  else
-                                       Bar 0 (newn1 :+++: n2)  next2                 
-         
-
-      
+                                       Bar 0 (newn1 :+++: n2)  next2;       
+                                       
+     s (Bar _ (PrimNote n1@(Rest2 d ofs )) next1) (Bar _ n2 next2) =  
+             -- n1 is the next incoming Rest to be attached to the rest of the tree
+             let (isBarLine, isOnBeat, maybeLeft, maybeRight) = detectBarline c d ofs
+                            in if (isBarLine) then
+                                 case ((maybeLeft, maybeRight)) of
+                                      (Just l, Just r) ->
+                                          let 
+                                             lhRest = PrimNote (Rest2 l ofs)
+                                             rhRest = PrimNote (Rest2 r (ofs + l))
+                                          in
+                                            Bar 0 lhRest (Bar 0 (rhRest :+++: n2) next2)   
+                                            
+                                      (Just l, Nothing) -> 
+                                          let 
+                                             lhRest = PrimNote (Rest2 l ofs)
+                                          in
+                                            Bar 0 lhRest (Bar 0 n2 next2)     
+                                            
+                                      (Nothing, Just r) ->  
+                                          let 
+                                            rhRest = PrimNote (Rest2 r ofs)
+                                          in
+                                            Bar 0 (PrimNote EmptyNote) (Bar 0 (rhRest :+++: n2) next2)  ;  
+                                            
+                                      (_,_) ->  
+                                          error "Barline: detecting split rests - no rests"           
+                                 else
+                                       Bar 0 (PrimNote n1 :+++: n2)  next2;          
      
-       -- s x y = error "barline: unexpected node in Notes Prim2 tree"
+       s x y = error "barline: unexpected node in Notes Prim2 tree"
 
 
 
@@ -119,9 +145,9 @@ barline c n = nFold fn s mul n where
 condense :: Music1 -> Notes Prim2
 condense = mFold fn s p modify where
     fn (Note d (p,v))   = PrimNote (Note2 (normaliseDur d) (0 / 1) p Nothing)
-    fn (Rest d)         = PrimNote (Rest2 (normaliseDur d))
+    fn (Rest d)         = PrimNote (Rest2 (normaliseDur d) (0 / 1))
     s m1 m2             = case (m1, m2) of
-                                 (PrimNote (Rest2 ofs), PrimNote (Note2 d ofs1 p onBeat)) -> PrimNote (Note2 (normaliseDur d) (normaliseDur ofs) p onBeat)
+                                 (PrimNote (Rest2 ofs _), PrimNote (Note2 d ofs1 p onBeat)) -> PrimNote (Note2 (normaliseDur d) (normaliseDur ofs) p onBeat)
                                  (_,_) ->  error "condense: unexpected Music1 tree"
     p m1 m2             = (:+++:) m1 m2
     modify c m          = m -- throw controls away for the time being
