@@ -1,4 +1,4 @@
-module Abc.Midi (barline, condense, midiToChar, loadMidiTrack, firstTimeSig, extractTimeSigs, testTS, fst3, snd3, thd3) where
+module Abc.Midi (barline, condense, midiToChar, midiToScore, loadMidiTrack, firstTimeSig, extractTimeSigs, testTS, fst3, snd3, thd3) where
 
 import Euterpea
 import Abc.Note
@@ -179,8 +179,18 @@ midiToChar m c = let m1 = fst3 $ fromMidi m
                       else
                          error $ "No melody detected in track "  ++ show (ctxTrackNo c)
 
--- experimental methods for investigating midi metadata
+-- transformational routine used in round-trips
+midiToScore :: Midi -> AbcContext -> Score AbcEntity
+midiToScore m c = let m1 = fst3 $ fromMidi m
+                           in splitLongNotes $ 
+                              accidentals $ 
+                              toAbcScore c $ 
+                              tuplets c $ 
+                              numberBars $ 
+                              barline c 
+                              (articulate . condense $ removeZeros m1)
 
+-- experimental methods for investigating midi metadata
 
 -- load a midi file and get at the track with the melody together with the time signature
 loadMidiTrack :: Int -> FilePath -> IO (Midi, TimeSig)

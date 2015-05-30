@@ -39,10 +39,13 @@ midiToTuplets :: Midi -> AbcContext -> Score Prim2
 midiToTuplets m c = let m1 = fst3 $ fromMidi m
                            in tuplets c $ numberBars $ barline c (condense $ removeZeros m1)
 
-
+{-
 midiToScore :: Midi -> AbcContext -> Score AbcEntity
 midiToScore m c = let m1 = fst3 $ fromMidi m
                            in toAbcScore c $ numberBars $ barline c (condense $ removeZeros m1)
+-}
+
+
 
 midiToAccidentals :: Midi -> AbcContext -> Score AbcEntity
 midiToAccidentals m c = let m1 = fst3 $ fromMidi m
