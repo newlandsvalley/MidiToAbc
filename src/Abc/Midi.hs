@@ -193,6 +193,7 @@ midiToScore m c = let m1 = fst3 $ fromMidi m
 -- experimental methods for investigating midi metadata
 
 -- load a midi file and get at the track with the melody together with the time signature
+-- and fix any NoteOn messages with velocity 0 as NoteOff
 loadMidiTrack :: Int -> FilePath -> IO (Midi, TimeSig)
 loadMidiTrack tno fn  = do
   r <- importFile fn 
@@ -203,7 +204,7 @@ loadMidiTrack tno fn  = do
            ts = trackZeroTimeSig m
        case mc of
          Left err -> error err
-         Right m -> return (m, ts)
+         Right m -> return (ensureNoteOffs m, ts)
 
 -- load a midi file
 loadMidiFile fn = do
@@ -212,7 +213,21 @@ loadMidiFile fn = do
      Left err -> error err
      Right m  -> return m
 
+-- experimental routine to fix midi files that use NoteOn with a velocity of 0 as an alternative to NoteOff
+ensureNoteOffs :: Midi -> Midi
+ensureNoteOffs (Midi tp td trks) = (Midi tp td (map noteOffs trks))
+   where
+     noteOffs :: Track Ticks -> Track Ticks
+     noteOffs t = map makeNoteOff t 
 
+-- convert a NoteOn velocity 0 message to NoteOff
+makeNoteOff :: (Ticks, Message) -> (Ticks, Message)
+makeNoteOff n@(ticks, NoteOn {channel = c, key = k, velocity = v}) = 
+  if (v == 0) then
+    (ticks, NoteOff {channel = c, key = k, velocity = v})
+  else
+    n
+makeNoteOff x = x
 
 -- get the incoming midi track 
 getMidiTrack :: Midi -> Int -> Either String Midi
