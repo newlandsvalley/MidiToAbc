@@ -9,7 +9,7 @@
 module Abc.Note ( AbcPitch, AbcScale, Keys, AbcContext (..), AbcEntity (..), AbcPitchClass (..), Prim2 (..), 
                            Mode (..), KeyName (..), Rhythm (..), KeySig, TimeSig, OnBeat, Measure,
                            toAbcEntity,  display, toMeasure, toDur, normaliseDur, measuresPerBar, 
-                           measuresPerBeat, unitDur, barsToLine, noteDisplayTolerance, shortestSupportedNote, 
+                           measuresPerBeat, unitDur, barsToLine, noteDisplayTolerance, shortestSupportedNote, shortestSupportedRest,
                            tsToDur, beats, keys, genScale, isTripleTime, displayRhythm ) where
 
 import Euterpea.Music.Note.Music hiding ( Mode(..), KeySig )
@@ -151,9 +151,11 @@ barsToLine = 6
 noteDisplayTolerance :: Measure
 noteDisplayTolerance = round $ sn / unitDur
 
--- what's the shortest supported note that we can actually display ?  Currently we use a thirty-second not - tn
-shortestSupportedNote :: Dur
+-- what's the shortest supported note that we can actually display ?  Currently we use a thirty-second note - tn
+-- and what about the shortest rest we can support - we may get better results from live performances by making this bigger
+shortestSupportedNote, shortestSupportedRest :: Dur
 shortestSupportedNote = tn
+shortestSupportedRest = sn
 
 -- Work out the measures at which the beats occur in a bar of music of any given time signature
 -- We are currently using a unit Duration of 1/96 which means a bar of (4,4) occupies 96, (3,4) occupies 72,

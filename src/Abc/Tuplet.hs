@@ -59,7 +59,7 @@ tuplets c s =  let timeSig = (ctxTimeSig c)
     
 -- identify all tuplet notes and gather them together within a sequence of notes
 addTuplets :: TimeSig -> Notes Prim2 -> Notes Prim2
-addTuplets t n = tupMap ( augmentNoteDuration . identifyDuplet ) $ toNotes $ replaceSinglets $ mergeN t $ flattenN t n
+addTuplets t n = tupMap ( augmentNoteDuration . identifyDuplet ) $ toNotes $ revertDegenerateTuplets $ mergeN t $ flattenN t n
 
 
 -- wrap a Prim2 note in a Tuplet container if it it a tuplet candidate
@@ -85,12 +85,26 @@ mergeN :: TimeSig -> [Notes Prim2] -> [Notes Prim2]
 mergeN t n = foldr (foldTuplets t) [] n
 
 -- remove any degenerate tuplets consisting of only one note by reinstating the single note
--- (experimental)
+-- no longer used - replaced by revertDegenerateTuplets
 replaceSinglets :: [Notes Prim2] -> [Notes Prim2]
 replaceSinglets ns = let f n = case n of 
                                 (Phrase (Tuplet r tns)) -> if (length tns == 1) then PrimNote (head tns) else n
                                 x -> x
                     in map f ns
+
+-- experimental - revert all degenerate tuplets
+revertDegenerateTuplets :: [Notes Prim2] -> [Notes Prim2]
+revertDegenerateTuplets ns = foldr (\n acc -> case n of 
+                                          (Phrase t@(Tuplet r tns)) -> (revertDegenerateTuplet t) ++ acc
+                                          x -> x : acc ) [] ns  
+
+-- experimental - revert any degenerate tuplet which might be:
+-- 1) a singlet note encapsulated in a tuplet
+-- 2) a doublet in triplet time (best represented normally)
+revertDegenerateTuplet :: Tuplet Prim2 -> [Notes Prim2]
+revertDegenerateTuplet t@(Tuplet r tns) = if (length tns == 1) then [PrimNote (head tns)]
+                                          else if ((length tns == 2) && (r == tripletTime)) then [ PrimNote (tns !! 0), PrimNote (tns !! 1) ]
+                                          else [Phrase t]
 
 -- merge the next tuplet candidate note with the last one wherever possible
 foldTuplets :: TimeSig -> Notes Prim2 -> [Notes Prim2] -> [Notes Prim2]

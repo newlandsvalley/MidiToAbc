@@ -1,4 +1,4 @@
-module Abc.AbcScore (flattenScore, toAbcScore, splitLongNotes, shortestSupportedNote, accidentals, articulate) where
+module Abc.AbcScore (flattenScore, toAbcScore, splitLongNotes, shortestSupportedNote, shortestSupportedRest, accidentals, articulate) where
 
 import Euterpea ( Dur )
 import Abc.Note
@@ -235,15 +235,14 @@ articulateTruncate n = articulate1 (0/1) n
 
 articulate1 :: Rational -> Notes Prim2 -> Notes Prim2
 articulate1 d pr@(PrimNote (Note2 dn dt p b)) = 
-    if (d >= (dn + dt - shortestSupportedNote)) then
+    if (d > (dn + dt - shortestSupportedNote)) then
       PrimNote EmptyNote
     else if (d > dt) then
       let newnd = (dt + dn - d)
-          newd = dn + dt
       in PrimNote (Note2 newnd dt p b)
     else pr  
 articulate1 d (pr@(PrimNote (Note2 dn dt p b)) :+++: n2)  =
-    if (d >= (dn + dt - shortestSupportedNote)) then
+    if (d > (dn + dt - shortestSupportedNote)) then
       articulate1 d n2
     else if (d > dt) then
       let newnd = (dt + dn - d)
@@ -262,12 +261,12 @@ articulateExtend :: Notes Prim2 -> Notes Prim2
 articulateExtend ((PrimNote (Note2 dn dt p b)) :+++: n2)  =
      let nextdt = nextNoteOffset n2
          delta = nextdt - (dn + dt)
-         newnd = if ((delta > 0) && (delta < shortestSupportedNote)) then
+         newnd = if ((delta > 0) && (delta < shortestSupportedRest)) then
            dn + delta
          else
            dn          
      in 
-      if (delta >= shortestSupportedNote) then
+      if (delta >= shortestSupportedRest) then
         PrimNote (Note2 newnd dt p b) :+++: PrimNote (Rest2 delta (dn + dt)) :+++: articulateExtend n2
       else
         PrimNote (Note2 newnd dt p b) :+++: articulateExtend n2;
