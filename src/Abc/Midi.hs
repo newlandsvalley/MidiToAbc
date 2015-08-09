@@ -1,4 +1,4 @@
-module Abc.Midi (barline, condense, midiToChar, midiToScore, loadMidiTrack, firstTimeSig, extractTimeSigs, testTS, fst3, snd3, thd3) where
+module Abc.Midi (barline, condense, midiToChar, midiToScore, loadMidiTrack, extractTimeSigs, testTS, fst3, snd3, thd3) where
 
 import Euterpea
 import Abc.Note
@@ -284,6 +284,15 @@ extractTimeSigs (Midi _ _ trks) = map initialTimeSigs trks
 -- extract the final time signature for track zero
 trackZeroTimeSig :: Midi -> TimeSig
 trackZeroTimeSig m = let 
+                   tzsigs = head $ extractTimeSigs m
+                   in case tzsigs of
+                      ([]) -> error "No time signature found in midi" 
+                      x -> head x
+
+-- extract the final time signature for track zero
+-- I originally used this - no idea why!
+trackZeroFinalTimeSig :: Midi -> TimeSig
+trackZeroFinalTimeSig m = let 
                    tzsigs = head $ extractTimeSigs m
                    in case tzsigs of
                       ([]) -> error "No time signature found in midi" 
