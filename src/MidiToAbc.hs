@@ -81,6 +81,7 @@ tuneopts (TuneArgs t l d r k m n i o False) =
                                  ctxScale = genScale (k,m),
                                  ctxLeadIn = l,
                                  ctxTimeSig = (4,4),
+                                 ctxBPM = 120,
                                  ctxDefaultNoteLen = d,
                                  ctxBeats = beats (4,4) }
 
@@ -88,10 +89,10 @@ tuneopts (TuneArgs t l d r k m n i o False) =
                        ++ " rhythm " ++ (show r) ++ " key "  ++ (show k) ++ " mode " ++ (show m) 
                        ++ " name " ++ n ++ " input " ++ i ++ " output " ++ o
 
-           (f, ts) <- loadMidiTrack t i     
+           (f, ts, bpm) <- loadMidiTrack t i     
 
-           -- update the context with the time signature from the midi
-           let ctx1 = ctx { ctxTimeSig = ts, ctxBeats = beats ts }     
+           -- update the context with the time signature and tempo from the midi
+           let ctx1 = ctx { ctxTimeSig = ts, ctxBeats = beats ts, ctxBPM = bpm }     
 
            writeFile o $ midiToChar f ctx1
 

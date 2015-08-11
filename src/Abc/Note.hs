@@ -7,7 +7,7 @@
 -- (hence all naturals are askey in the key of C Major)
 
 module Abc.Note ( AbcPitch, AbcScale, Keys, AbcContext (..), AbcEntity (..), AbcPitchClass (..), Prim2 (..), 
-                           Mode (..), KeyName (..), Rhythm (..), KeySig, TimeSig, OnBeat, Measure,
+                           Mode (..), KeyName (..), Rhythm (..), KeySig, TimeSig, OnBeat, Measure, BPM,
                            toAbcEntity,  display, toMeasure, toDur, normaliseDur, measuresPerBar, 
                            measuresPerBeat, unitDur, barsToLine, noteDisplayTolerance, shortestSupportedNote, shortestSupportedRest,
                            tsToDur, beats, keys, genScale, isTripleTime, displayRhythm ) where
@@ -26,6 +26,9 @@ data AbcPitchClass  =   Cflt | Cexpl | Caskey | Cshp | Dflt  | Dexpl | Daskey  |
 
 -- a Measure is a note duration as a rounded number of Euterpea Dur (fractional durations) 
 type Measure = Int
+
+-- Beats per minute
+type BPM = Int
 
 -- does the note occur on the beat
 type OnBeat = Maybe Int
@@ -117,6 +120,7 @@ data AbcContext = AbcContext {
                     ctxScale          :: AbcScale,  -- the scale that defines the key signature
                     ctxLeadIn         :: Dur,       -- the lead-in bar or 'pickup' duration
                     ctxTimeSig        :: TimeSig,   -- the time signature
+                    ctxBPM            :: BPM,       -- the beats per minute
                     ctxDefaultNoteLen :: Dur,       -- the duration of a single note  (ABC L field)
                     ctxBeats          :: [Int]      -- Measures at which the beats occur in this rhythm
                   }
@@ -470,6 +474,7 @@ testTranslatePitches = let context = AbcContext {ctxTrackNo = 0,
                                                  ctxScale = genScale (Gn, Major),
                                                  ctxLeadIn = (0 / 16),
                                                  ctxTimeSig = (4,4),
+                                                 ctxBPM = 120,
                                                  ctxDefaultNoteLen = (1 / 16),
                                                  ctxBeats = beats (4,4) }
                            fn pc = (runReader (toAbcPitch pc)) context
@@ -486,6 +491,7 @@ testTranslateNotes = let context = AbcContext {ctxTrackNo = 0,
                                                ctxScale = genScale (Gn, Major),
                                                ctxLeadIn = (0 / 16),
                                                ctxTimeSig = (3,4),
+                                               ctxBPM = 120,
                                                ctxDefaultNoteLen = (1 / 16),
                                                ctxBeats = beats (3,4) }
                          -- run the toAbcEntity reader on the context (for the scale) to get a function  matching pitch class to AbcEntity

@@ -194,7 +194,7 @@ midiToScore m c = let m1 = fst3 $ fromMidi m
 
 -- load a midi file and get at the track with the melody together with the time signature
 -- and fix any NoteOn messages with velocity 0 as NoteOff
-loadMidiTrack :: Int -> FilePath -> IO (Midi, TimeSig)
+loadMidiTrack :: Int -> FilePath -> IO (Midi, TimeSig, BPM)
 loadMidiTrack tno fn  = do
   r <- importFile fn 
   case r of
@@ -202,9 +202,10 @@ loadMidiTrack tno fn  = do
     Right m -> do
        let mc = getMidiTrack m tno
            ts = trackZeroTimeSig m
+           bpm = trackZeroTempo m
        case mc of
          Left err -> error err
-         Right m -> return (ensureNoteOffs m, ts)
+         Right m -> return (ensureNoteOffs m, ts, bpm)
 
 -- load a midi file
 loadMidiFile fn = do
@@ -281,7 +282,7 @@ extractTimeSigs (Midi _ _ trks) = map initialTimeSigs trks
    (no real idea which one to use yet)
 -}
 
--- extract the final time signature for track zero
+-- extract the first time signature for track zero
 trackZeroTimeSig :: Midi -> TimeSig
 trackZeroTimeSig m = let 
                    tzsigs = head $ extractTimeSigs m
@@ -304,13 +305,44 @@ firstTimeSig m = let
                    tsigs = join $ extractTimeSigs m
                    in case tsigs of
                       ([]) -> error "No time signature found in midi track zero"
-                      (x:xs) -> x          
+                      (x:xs) -> x  
+
+-- extract the first tempo change for track zero and return as BPM
+trackZeroTempo :: Midi -> BPM
+trackZeroTempo (Midi _ _ trks) = initialTempoChange $ head trks
+
+
+-- extract the first tempo change marker from the initial track metadata and return in the form of a BPM Tempo marker (number of beats per minute)
+initialTempoChange :: Track a -> BPM
+initialTempoChange t =
+    let headers = takeWhile (\(a,m) -> isMetaMessage m ) t
+        tempi = filter (\(a,m) -> case m of
+             (TempoChange _) -> True
+             _ -> False
+            ) headers
+    in toTuneTempo tempi   
+
+-- convert the first HCodec TempoChange from track 0 metadata to ABC BPM
+-- a Tempo Change is the duration of a single note in microseconds
+-- and we return the number of such notes that fit into a minute
+toTuneTempo :: Track a -> BPM
+toTuneTempo [] = 120
+toTuneTempo (t:ts) = case t of 
+    (a,(TempoChange d)) ->
+      let durMillisec = d `div` 1000
+        in 60000 `div` durMillisec 
+    _ -> error "midi header initialTempoChange fillter failed"
+
            
       
 
 testTS fn= do
            x <- loadMidiFile fn
            print $ extractTimeSigs x
+
+testBPM fn= do
+           x <- loadMidiFile fn
+           print $ trackZeroTempo x
 
 
 

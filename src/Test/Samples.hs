@@ -17,10 +17,12 @@ This holds a few convenient functions to try out either full or partial translat
 
 
 tcd fn = do
-          (x,ts) <- loadMidiTrack 1 fn
+          (x,ts,bpm) <- loadMidiTrack 1 fn
           print $ fst3 $ fromMidi x
           print $ snd3 $ fromMidi x
           print $ thd3 $ fromMidi x
+          print $ "time sig: " ++ show ts
+          print $ "tempo: " ++ show bpm
 
 midiToNotes :: Midi -> Notes Prim2
 midiToNotes m = let m1 = fst3 $ fromMidi m
@@ -75,7 +77,7 @@ abcScore fn = do
 
 brudestykke = do 
                 let trackNo = 0
-                (m,ts) <- loadMidiTrack trackNo  "../midi/brudemarsch1.mid"
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/brudemarsch1.mid"
                 let output = "../abc/brudemarsch1.abc"  
                     cfg = AbcContext {ctxTrackNo = trackNo,
                                       ctxName= "brudemarsch1",
@@ -85,6 +87,7 @@ brudestykke = do
                                       ctxScale = genScale (An, Major),
                                       ctxLeadIn = (0 / 16),
                                       ctxTimeSig = ts,
+                                      ctxBPM = bpm,
                                       ctxDefaultNoteLen = sn,
                                       ctxBeats = beats ts }   
                          
@@ -94,7 +97,7 @@ brudestykke = do
 
 hemtilldalen = do
                 let trackNo = 0
-                (m,ts) <- loadMidiTrack trackNo  "../midi/hemtilldalen.mid"      
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/hemtilldalen.mid"      
                 let output = "../abc/hemtilldalen.abc"                   
                 print $ "time sig " ++ (show ts)   
                 writeFile output $ midiToChar m AbcContext {ctxTrackNo = trackNo,
@@ -105,6 +108,7 @@ hemtilldalen = do
                                                  ctxScale = genScale (Gn, Major),
                                                  ctxLeadIn = (1 / 4),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = en,
                                                  ctxBeats = beats ts }
                 print $ "file written to " ++ output
@@ -112,7 +116,7 @@ hemtilldalen = do
 
 arepolskan = do
                 let trackNo = 0
-                (m,ts) <- loadMidiTrack trackNo  "../midi/årepolskan.mid"
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/årepolskan.mid"
                 let output = "../abc/årepolskan.abc"                          
                 print $ "time sig " ++ (show ts)           
                 writeFile output $ midiToChar m AbcContext {ctxTrackNo = trackNo,
@@ -123,6 +127,7 @@ arepolskan = do
                                                  ctxScale = genScale (Gn, Major),
                                                  ctxLeadIn = (1 / 8),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = en,
                                                  ctxBeats = beats ts }
                 print $ "file written to " ++ output
@@ -130,7 +135,7 @@ arepolskan = do
 -- this tests triplets
 antefalk   = do 
                 let trackNo = 0
-                (m,ts) <- loadMidiTrack trackNo  "../midi/antefalkpolska.mid" 
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/antefalkpolska.mid" 
                 let output = "../abc/antefalkpolska.abc"                                   
                 print $ "time sig " ++ (show ts)           
                 writeFile output $ midiToChar m AbcContext {ctxTrackNo = trackNo,
@@ -141,6 +146,7 @@ antefalk   = do
                                                  ctxScale = genScale (Dn, Major),
                                                  ctxLeadIn = (0 / 8),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = sn,
                                                  ctxBeats = beats ts }
                 print $ "file written to " ++ output
@@ -150,7 +156,7 @@ antefalk   = do
 
 alberta   = do  
                 let trackNo = 0
-                (m,ts) <- loadMidiTrack trackNo  "../midi/albertaugustssonengelska.mid" 
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/albertaugustssonengelska.mid" 
                 let output = "../abc/albertaugustsson.abc"             
                 print $ "time sig " ++ (show ts) 
                 writeFile output $ midiToChar m AbcContext {ctxTrackNo = trackNo,
@@ -161,6 +167,7 @@ alberta   = do
                                                  ctxScale = genScale (An, Major),
                                                  ctxLeadIn = (1 / 8),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = sn,
                                                  ctxBeats = beats ts }
                 print $ "file written to " ++ output
@@ -170,7 +177,7 @@ alberta   = do
 carolansreceipt = 
             do  
                 let trackNo = 1
-                (m,ts) <- loadMidiTrack trackNo  "../midi/carolansreceipt.mid" 
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/carolansreceipt.mid" 
                 let output = "../abc/carolansreceipt.abc"                             
                 print $ "time sig " ++ (show ts) 
 
@@ -182,6 +189,7 @@ carolansreceipt =
                                                  ctxScale = genScale (Gn, Major),
                                                  ctxLeadIn = (0 / 8),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = sn,
                                                  ctxBeats = beats ts }
                 print $ "file written to " ++ output
@@ -190,7 +198,7 @@ carolansreceipt =
 
 amanda = do
                 let trackNo = 0
-                (m,ts) <- loadMidiTrack trackNo  "../midi/amanda.mid" 
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/amanda.mid" 
                 let output = "../abc/amanda.abc"                                    
                 print $ "time sig " ++ (show ts)                    
                 print $ midiToAccidentals m AbcContext {ctxTrackNo = trackNo,
@@ -201,6 +209,7 @@ amanda = do
                                                  ctxScale = genScale (Gn, Minor),
                                                  ctxLeadIn = (1 / 8),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = sn,
                                                  ctxBeats = beats ts }
                 -- print $ "file written to " ++ output
@@ -209,7 +218,7 @@ amanda = do
 galwayHornpipe = 
            do
                 let trackNo = 1
-                (m,ts) <- loadMidiTrack trackNo  "../midi/Galway-Hornpipe.mid" 
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/Galway-Hornpipe.mid" 
                 let output = "../abc/Galway-Hornpipe.abc"                                    
                 print $ "time sig " ++ (show ts)                    
                 writeFile output $ midiToChar m AbcContext {ctxTrackNo = trackNo,
@@ -220,6 +229,7 @@ galwayHornpipe =
                                                  ctxScale = genScale (Gn, Major),
                                                  ctxLeadIn = (0 / 8),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = sn,
                                                  ctxBeats = beats ts }
                 print $ "file written to " ++ output
@@ -228,7 +238,7 @@ galwayHornpipe =
 -- the only tune so far actually generated by a MIDI keyboard (played badly)
 pianoSynth = do
                 let trackNo = 1
-                (m,ts) <- loadMidiTrack trackNo  "../midi/PianoSynth-Track_1-9.mid"  
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/PianoSynth-Track_1-9.mid"  
                 let output = "../abc/PianoSynth-Track_1-9.abc"     
 
                 print $ "time sig " ++ (show ts)
@@ -241,6 +251,7 @@ pianoSynth = do
                                                  ctxScale = genScale (Dn, Major),
                                                  ctxLeadIn = (0 / 4),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = sn,
                                                  ctxBeats = beats ts }
                 
@@ -248,7 +259,7 @@ pianoSynth = do
  
 abcchord = do 
              let trackNo = 0
-             (m,ts) <- loadMidiTrack trackNo  "../midi/abcchord.mid"     
+             (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/abcchord.mid"     
                        
              print $ midiToChar m AbcContext {ctxTrackNo = trackNo,
                                               ctxName= "abcchord",
@@ -258,6 +269,7 @@ abcchord = do
                                               ctxScale = genScale (Gn, Major),
                                               ctxLeadIn = (0 / 4),
                                               ctxTimeSig = ts,
+                                              ctxBPM = bpm,
                                               ctxDefaultNoteLen = en,
                                               ctxBeats = beats ts }      
              {-
@@ -266,7 +278,7 @@ abcchord = do
 
 testBarline = do  
                 let trackNo = 0
-                (m,ts) <- loadMidiTrack trackNo  "../midi/brudemarsch1.mid" 
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/brudemarsch1.mid" 
                 print $ midiToBarline m AbcContext {ctxTrackNo = trackNo,
                                                  ctxName= "brudemarsch1",
                                                  ctxRhythm = Marsch,
@@ -275,18 +287,19 @@ testBarline = do
                                                  ctxScale = genScale (An, Major),
                                                  ctxLeadIn = (0 / 16),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = sn,
                                                  ctxBeats = beats ts  }
 
 simplifyBrudestykke = do
                 let trackNo = 0
-                (m,ts) <- loadMidiTrack trackNo  "../midi/brudemarsch1.mid"
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/brudemarsch1.mid"
                 print $ condense $ removeZeros $ fst3 $ fromMidi m
                 
                 
 testPolska = do
                 let trackNo = 0
-                (m,ts) <- loadMidiTrack trackNo  "../midi/årepolskan.mid" 
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/årepolskan.mid" 
                 print $ midiToBarline m AbcContext {ctxTrackNo = trackNo,
                                                  ctxName= "arepolskan",
                                                  ctxRhythm = Polska,
@@ -295,12 +308,13 @@ testPolska = do
                                                  ctxScale = genScale (Gn, Major),
                                                  ctxLeadIn = (1 / 8),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = en,
                                                  ctxBeats = beats ts }
 
 testTriplets = do     
                 let trackNo = 0
-                (m,ts) <- loadMidiTrack trackNo  "../midi/threefourtripletpolska.mid" 
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/threefourtripletpolska.mid" 
                 print $ midiToTuplets m AbcContext {ctxTrackNo = trackNo,
                                                  ctxName= "threefourtripletpolska",
                                                  ctxRhythm = Polska,
@@ -309,12 +323,13 @@ testTriplets = do
                                                  ctxScale = genScale (Dn, Major),
                                                  ctxLeadIn = (0 / 8),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = en,
                                                  ctxBeats = beats ts }
 
 testQuadruplets = do  
                 let trackNo = 0
-                (m,ts) <- loadMidiTrack trackNo "../midi/quadrupletpolska.mid" 
+                (m,ts,bpm) <- loadMidiTrack trackNo "../midi/quadrupletpolska.mid" 
                 print $ midiToBarline m AbcContext {ctxTrackNo = trackNo,
                                                  ctxName= "quadrupletpolska",
                                                  ctxRhythm = Polska,
@@ -323,12 +338,13 @@ testQuadruplets = do
                                                  ctxScale = genScale (Dn, Major),
                                                  ctxLeadIn = (0 / 8),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = en,
                                                  ctxBeats = beats ts }
 
 testPianoSynth = do  
                 let trackNo = 1
-                (m,ts) <- loadMidiTrack trackNo  "../midi/PianoSynth-Track_1-9.mid"  
+                (m,ts,bpm) <- loadMidiTrack trackNo  "../midi/PianoSynth-Track_1-9.mid"  
                 let output = "../abc/PianoSynth-Track_1-9.abc"     
 
                 print $ "time sig " ++ (show ts)
@@ -341,25 +357,26 @@ testPianoSynth = do
                                                  ctxScale = genScale (Dn, Major),
                                                  ctxLeadIn = (0 / 4),
                                                  ctxTimeSig = ts,
+                                                 ctxBPM = bpm,
                                                  ctxDefaultNoteLen = sn,
                                                  ctxBeats = beats ts }
                    
 
 simplify tno fn = do
-                 (m,ts) <- loadMidiTrack tno fn
+                 (m,ts,bpm) <- loadMidiTrack tno fn
                  print $ condense $ removeZeros $ fst3 $ fromMidi m
 
 midi tno fn = do
-                 (m,ts) <- loadMidiTrack tno fn
+                 (m,ts,bpm) <- loadMidiTrack tno fn
                  print $ fromMidi m
 
 legato tno fn = do
-                 (m,ts) <- loadMidiTrack tno fn
+                 (m,ts,bpm) <- loadMidiTrack tno fn
                  print $ articulate $ condense $ removeZeros $ fst3 $ fromMidi m
 
 
 playIt tno fn = do
-                 (m,ts) <- loadMidiTrack tno fn
+                 (m,ts,bpm) <- loadMidiTrack tno fn
                  play $ removeZeros $ fst3 $  fromMidi m
 
 
